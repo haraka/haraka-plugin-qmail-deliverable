@@ -7,74 +7,38 @@
 
 # haraka-plugin-qmail-deliverable
 
-Clone me, to create a new plugin!
+A client for checking the deliverability of an email address against the [qmail-deliverabled](http://search.cpan.org/dist/Qmail-Deliverable/) daemon.
 
-# Template Instructions
+On incoming messages (relaying=false), the RCPT TO address is validated.
 
-These instructions will not self-destruct after use. Use and destroy.
+On outgoing messages (relaying=true) the MAIL FROM address is validated when
+the `check\_outbound` option is enabled.
 
-See also, [How to Write a Plugin](https://github.com/haraka/Haraka/wiki/Write-a-Plugin) and [Plugins.md](https://github.com/haraka/Haraka/blob/master/docs/Plugins.md) for additional plugin writing information.
+## Configuration
 
-## Create a new repo for your plugin
+The host and port that qmail-deliverabled is listening on can be set by
+altering the contents of `config/rcpt_to.qmail_deliverable.ini`
 
-Haraka plugins are named like `haraka-plugin-something`. All the namespace after `haraka-plugin-` is yours for the taking. Please check the [Plugins]() page and a Google search to see what plugins already exist.
+* `host` (Default: localhost)
 
-Once you've settled on a name, create the GitHub repo. On the repo's main page, click the _Clone or download_ button and copy the URL. Then paste that URL into a local ENV variable with a command like this:
+* `port` (Default: 8998)
 
-```sh
-export MY_GITHUB_ORG=haraka
-export MY_PLUGIN_NAME=haraka-plugin-SOMETHING
-```
+* `check_outbound`=true
 
-Clone and rename the qmail-deliverable repo:
+When `check_outbound` is enabled, and a connection has relay privileges, the
+MAIL FROM address is validated as deliverable.
 
-```sh
-git clone git@github.com:haraka/haraka-plugin-qmail-deliverable.git
-mv haraka-plugin-qmail-deliverable $MY_PLUGIN_NAME
-cd $MY_PLUGIN_NAME
-git remote rm origin
-git remote add origin "git@github.com:$MY_GITHUB_ORG/$MY_PLUGIN_NAME.git"
-```
+## Per-domain Configuration
 
-Now you'll have a local git repo to begin authoring your plugin
+Additionally, domains can each have their own configuration for connecting
+to qmail-deliverabled. The defaults are the same, so only the differences
+needs to be declared. Example:
 
-## rename boilerplate
+    [example.com]
+    host=192.168.0.1
 
-Replaces all uses of the word `qmail-deliverable` with your plugin's name.
-
-./redress.sh [something]
-
-You'll then be prompted to update package.json and then force push this repo onto the GitHub repo you've created earlier.
-
-
-## Enable Travis-CI testing
-
-- [ ] visit your [Travis-CI profile page](https://travis-ci.org/profile) and enable Continuous Integration testing on the repo
-- [ ] enable Code Climate. Click the _code climate_ badge and import your repo.
-
-
-
-# Add your content here
-
-## INSTALL
-
-```sh
-cd /path/to/local/haraka
-npm install haraka-plugin-qmail-deliverable
-echo "qmail-deliverable" >> config/plugins
-service haraka restart
-```
-
-### Configuration
-
-If the default configuration is not sufficient, copy the config file from the distribution into your haraka config dir and then modify it:
-
-```sh
-cp node_modules/haraka-plugin-qmail-deliverable/config/qmail-deliverable.ini config/qmail-deliverable.ini
-$EDITOR config/qmail-deliverable.ini
-```
-
-## USAGE
+    [example2.com]
+    host=192.168.0.2
 
 
 <!-- leave these buried at the bottom of the document -->
@@ -90,3 +54,4 @@ $EDITOR config/qmail-deliverable.ini
 [gk-url]: https://greenkeeper.io/
 [npm-img]: https://nodei.co/npm/haraka-plugin-qmail-deliverable.png
 [npm-url]: https://www.npmjs.com/package/haraka-plugin-qmail-deliverable
+rcpt\_to.qmail\_deliverable
