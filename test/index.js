@@ -5,11 +5,31 @@ var fixtures     = require('haraka-test-fixtures');
 
 var _set_up = function (done) {
 
-    this.plugin = new fixtures.plugin('rcpt_to.qmail_deliverable');
-    this.connection = fixtures.connection.createConnection();
+    this.plugin = new fixtures.plugin('qmail-deliverable');
+    this.connection = new fixtures.connection.createConnection();
 
     done();
 };
+
+exports.load_qmd_ini = {
+    setUp : _set_up,
+    'loads config' : function (test) {
+        test.expect(1);
+        this.plugin.load_qmd_ini();
+        test.ok(this.plugin.cfg.main.check_outbound);
+        test.done();
+    }
+}
+
+exports.register = {
+    setUp : _set_up,
+    'loads the config' : function (test) {
+        test.expect(1);
+        this.plugin.register();
+        test.ok(this.plugin.cfg.main.check_outbound);
+        test.done();
+    }
+}
 
 exports.get_qmd_response = {
     setUp : _set_up,

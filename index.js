@@ -6,10 +6,11 @@ const querystring = require('querystring');
 
 exports.register = function () {
     let plugin = this;
+
     plugin.load_qmd_ini();
 
     if (plugin.cfg.main.check_outbound) {
-        plugin.register('hook_mail', 'check_mail_from');
+        plugin.register_hook('hook_mail', 'check_mail_from');
     }
 };
 
