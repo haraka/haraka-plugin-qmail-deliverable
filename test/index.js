@@ -1,12 +1,23 @@
 'use strict';
 
-var Address      = require('address-rfc2821');
-var fixtures     = require('haraka-test-fixtures');
+const Address      = require('address-rfc2821');
+const fixtures     = require('haraka-test-fixtures');
 
-var _set_up = function (done) {
+const _set_up = function (done) {
 
     this.plugin = new fixtures.plugin('qmail-deliverable');
     this.connection = new fixtures.connection.createConnection();
+
+    done();
+};
+
+const _set_up_cfg = function (done) {
+
+    this.plugin = new fixtures.plugin('qmail-deliverable');
+    this.connection = new fixtures.connection.createConnection();
+    this.connection.transaction = new fixtures.transaction.createTransaction();
+    this.connection.transaction.queue = {};
+    this.plugin.register();
 
     done();
 };
@@ -31,6 +42,75 @@ exports.register = {
     }
 }
 
+exports.get_next_hop = {
+    setUp : _set_up_cfg,
+    'wants_queue=empty sets smtp://' : function (test) {
+        test.expect(1);
+        const testConfig = {
+            host: '1.2.3.5',
+        }
+        test.equal(
+            this.plugin.get_next_hop(testConfig),
+            'smtp://1.2.3.5'
+        );
+        test.done();
+    },
+    'wants_queue=lmtp sets lmtp://' : function (test) {
+        test.expect(1);
+        const testConfig = {
+            host: '1.2.3.5',
+        }
+        test.equal(
+            this.plugin.get_next_hop(testConfig, 'lmtp'),
+            'lmtp://1.2.3.5'
+        );
+        test.done();
+    },
+}
+
+exports.set_queue = {
+    setUp : _set_up_cfg,
+    'wants_queue=empty sets none' : function (test) {
+        test.expect(3);
+        this.plugin.cfg = {
+            'example.com': { host: '1.2.3.4' },
+        }
+        test.equal(
+            this.plugin.set_queue(this.connection, undefined, 'example.com'),
+            true
+        );
+        test.equal(this.connection.transaction.queue.wants, undefined);
+        test.equal(this.connection.transaction.queue.next_hop, undefined);
+        test.done();
+    },
+    'wants_queue=smtp_forward sets txn.queue.wants & queue.next_hop': function (test) {
+        test.expect(3);
+        this.plugin.cfg = {
+            'example.com': { host: '1.2.3.4' },
+        }
+        test.equal(
+            this.plugin.set_queue(this.connection, 'smtp_forward', 'example.com'),
+            true
+        );
+        test.equal(this.connection.transaction.queue.wants, 'smtp_forward');
+        test.equal(this.connection.transaction.queue.next_hop, 'smtp://1.2.3.4');
+        test.done();
+    },
+    'wants_queue=lmtp sets txn.queue.wants & queue.next_hop': function (test) {
+        test.expect(3);
+        this.plugin.cfg = {
+            'example.com': { host: '1.2.3.5' },
+        }
+        test.equal(
+            this.plugin.set_queue(this.connection, 'lmtp', 'example.com'),
+            true
+        );
+        test.equal(this.connection.transaction.queue.wants, 'lmtp');
+        test.equal(this.connection.transaction.queue.next_hop, 'lmtp://1.2.3.5');
+        test.done();
+    }
+}
+
 exports.get_qmd_response = {
     setUp : _set_up,
     'stub' : function (test) {
@@ -38,7 +118,7 @@ exports.get_qmd_response = {
         // can't really test this very well without a QMD server
         test.done();
     },
-};
+}
 
 exports.check_qmd_response = {
     setUp : _set_up,
@@ -152,5 +232,4 @@ exports.check_qmd_response = {
         test.equal(undefined, r[0]);
         test.done();
     },
-};
-
+}
