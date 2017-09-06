@@ -93,15 +93,15 @@ exports.set_queue = function (connection, queue_wanted, domain) {
     const txn = connection.transaction;
     const next_hop = plugin.get_next_hop(dom_cfg, queue_wanted);
 
-    if (!txn.queue.wants) {
-        txn.queue.wants = queue_wanted;
-        txn.queue.next_hop = next_hop;
+    if (!txn.notes.get('queue.wants')) {
+        txn.notes.set('queue.wants', queue_wanted);
+        txn.notes.set('queue.next_hop', next_hop);
         return true;
     }
 
     // multiple recipients with same destination
-    if (txn.queue.wants === queue_wanted &&
-        txn.queue.next_hop === next_hop) {
+    if (txn.notes.get('queue.wants') === queue_wanted &&
+        txn.notes.get('queue.next_hop') === next_hop) {
         return true;
     }
 
@@ -245,17 +245,18 @@ exports.check_qmd_response = function (connection, hexnum) {
 };
 
 exports.hook_queue = function (next, connection) {
-    const txn = connection.transaction;
-    if (txn.queue.wants && txn.queue.wants !== 'lmtp') return next();
+
+    const wants = connection.transaction.notes.get('queue.wants');
+    if (wants && wants !== 'lmtp') return next();
 
     this.logdebug('QMD routing to outbound');
-    outbound.send_email(txn, next);
+    outbound.send_email(connection.transaction, next);
 }
 
 exports.hook_get_mx = function (next, hmail, domain) {
     const plugin = this;
 
-    if (hmail.todo.queue.wants !== 'lmtp') return next();
+    if (hmail.todo.notes.get('queue.wants') !== 'lmtp') return next();
 
     let cfg = plugin.cfg[domain.toLowerCase()];
     if (cfg === undefined) cfg = plugin.cfg.main;
@@ -272,8 +273,9 @@ exports.hook_get_mx = function (next, hmail, domain) {
         if (dest.hostname) mx.exchange = dest.hostname;
         if (dest.port) mx.port = dest.port;
         if (dest.auth) {
-            mx.user = dest.auth.split(':')[0];
-            mx.pass = dest.auth.split(':')[1];
+            mx.auth_type = 'plain';
+            mx.auth_user = dest.auth.split(':')[0];
+            mx.auth_pass = dest.auth.split(':')[1];
         }
     }
 
