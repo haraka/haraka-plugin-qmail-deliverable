@@ -16,7 +16,7 @@ const _set_up_cfg = function (done) {
     this.plugin = new fixtures.plugin('qmail-deliverable');
     this.connection = new fixtures.connection.createConnection();
     this.connection.transaction = new fixtures.transaction.createTransaction();
-    this.connection.transaction.queue = {};
+    // this.connection.transaction.queue = {};
     this.plugin.register();
 
     done();
@@ -79,11 +79,11 @@ exports.set_queue = {
             this.plugin.set_queue(this.connection, undefined, 'example.com'),
             true
         );
-        test.equal(this.connection.transaction.queue.wants, undefined);
-        test.equal(this.connection.transaction.queue.next_hop, undefined);
+        test.equal(this.connection.transaction.notes.get('queue.wants'), undefined);
+        test.equal(this.connection.transaction.notes.get('queue.next_hop'), undefined);
         test.done();
     },
-    'wants_queue=smtp_forward sets txn.queue.wants & queue.next_hop': function (test) {
+    'wants_queue=smtp_forward sets txn.notes.queue.wants & queue.next_hop': function (test) {
         test.expect(3);
         this.plugin.cfg = {
             'example.com': { host: '1.2.3.4' },
@@ -92,8 +92,8 @@ exports.set_queue = {
             this.plugin.set_queue(this.connection, 'smtp_forward', 'example.com'),
             true
         );
-        test.equal(this.connection.transaction.queue.wants, 'smtp_forward');
-        test.equal(this.connection.transaction.queue.next_hop, 'smtp://1.2.3.4');
+        test.equal(this.connection.transaction.notes.get('queue.wants'), 'smtp_forward');
+        test.equal(this.connection.transaction.notes.get('queue.next_hop'), 'smtp://1.2.3.4');
         test.done();
     },
     'wants_queue=lmtp sets txn.queue.wants & queue.next_hop': function (test) {
@@ -105,8 +105,8 @@ exports.set_queue = {
             this.plugin.set_queue(this.connection, 'lmtp', 'example.com'),
             true
         );
-        test.equal(this.connection.transaction.queue.wants, 'lmtp');
-        test.equal(this.connection.transaction.queue.next_hop, 'lmtp://1.2.3.5');
+        test.equal(this.connection.transaction.notes.get('queue.wants'), 'lmtp');
+        test.equal(this.connection.transaction.notes.get('queue.next_hop'), 'lmtp://1.2.3.5');
         test.done();
     }
 }
