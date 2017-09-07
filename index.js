@@ -3,11 +3,19 @@
 
 const http        = require('http');
 const querystring = require('querystring');
+const url         = require('url');
+
+let outbound;
 
 exports.register = function () {
     let plugin = this;
 
     plugin.load_qmd_ini();
+
+    if (process.env.HARAKA) {
+        // permit testing outside of Haraka
+        outbound = this.haraka_require('outbound');
+    }
 
     if (plugin.cfg.main.check_outbound) {
         plugin.register_hook('hook_mail', 'check_mail_from');
@@ -61,27 +69,39 @@ exports.check_mail_from = function (next, connection, params) {
     });
 };
 
+exports.get_next_hop = function (dom_cfg, queue_wanted) {
+
+    if (dom_cfg.next_hop) return dom_cfg.next_hop;
+
+    switch (queue_wanted) {
+        case 'lmtp':
+            return ('lmtp://' + dom_cfg.host);
+        default:
+            return ('smtp://' + dom_cfg.host);
+    }
+}
+
 exports.set_queue = function (connection, queue_wanted, domain) {
-    let plugin = this;
+    const plugin = this;
 
     let dom_cfg = plugin.cfg[domain];
-    if (dom_cfg === undefined) dom_cfg = {};
+    if (dom_cfg === undefined) dom_cfg = plugin.cfg.main;
 
-    if (!queue_wanted) queue_wanted = dom_cfg.queue || plugin.cfg.main.queue;
+    if (!queue_wanted) queue_wanted = dom_cfg.queue;
     if (!queue_wanted) return true;
 
-    if (queue_wanted === 'smtp_forward') {
-        var dst_host = dom_cfg.host || plugin.cfg.main.host;
-        if (dst_host) queue_wanted += ':' + dst_host;
-    }
+    const txn = connection.transaction;
+    const next_hop = plugin.get_next_hop(dom_cfg, queue_wanted);
 
-    if (!connection.transaction.notes.queue) {
-        connection.transaction.notes.queue = queue_wanted;
+    if (!txn.notes.get('queue.wants')) {
+        txn.notes.set('queue.wants', queue_wanted);
+        txn.notes.set('queue.next_hop', next_hop);
         return true;
     }
 
     // multiple recipients with same destination
-    if (connection.transaction.notes.queue === queue_wanted) {
+    if (txn.notes.get('queue.wants') === queue_wanted &&
+        txn.notes.get('queue.next_hop') === next_hop) {
         return true;
     }
 
@@ -90,11 +110,13 @@ exports.set_queue = function (connection, queue_wanted, domain) {
 }
 
 exports.hook_rcpt = function (next, connection, params) {
-    var plugin = this;
-    var txn = connection.transaction;
+    const plugin = this;
+    const txn = connection.transaction;
 
-    var rcpt = params[0];
-    var domain = rcpt.host.toLowerCase();
+    const rcpt = params[0];
+    const domain = rcpt.host.toLowerCase();
+    let dom_cfg = plugin.cfg[domain];
+    if (dom_cfg === undefined) dom_cfg = plugin.cfg.main;
 
     // Qmail::Deliverable::Client does a rfc2822 "atext" test
     // but Haraka has already validated for us by this point
@@ -104,51 +126,52 @@ exports.hook_rcpt = function (next, connection, params) {
             return next(DENYSOFT, "error validating email address");
         }
 
+        const [r_code, dst_type] = qmd_r;
+
         // a client with relaying privileges is sending from a local domain.
         // Any RCPT is acceptable.
         if (connection.relaying && txn.notes.local_sender) {
             txn.results.add(plugin, {pass: "relaying local_sender"});
             plugin.set_queue(connection, 'outbound');
+            connection.loginfo(`queue: ${txn.queue.wanted}`);
             return next(OK);
         }
 
-        if (qmd_r[0] === OK) {
-            txn.results.add(plugin, {pass: "rcpt." + qmd_r[1]});
-            if (plugin.set_queue(connection, null, domain)) {
+        if (r_code === OK) {
+            txn.results.add(plugin, {pass: "rcpt." + dst_type, emit: true });
+            let queue = dom_cfg.queue;
+            if (dst_type === 'vpopmail dir' && dom_cfg.next_hop) {
+                if (/^lmtp/.test(dom_cfg.next_hop)) queue = 'lmtp';
+            }
+            if (plugin.set_queue(connection, queue, domain)) {
                 return next(OK);
             }
             return next(DENYSOFT, "Split transaction, retry soon");
         }
 
-        if (qmd_r[0] === undefined) {
-            txn.results.add(plugin, {err: "rcpt." + qmd_r[1]});
+        if (r_code === undefined) {
+            txn.results.add(plugin, {err: "rcpt." + dst_type});
             return next();
         }
 
         // no need to DENY[SOFT] for invalid addresses. If no rcpt_to.* plugin
         // returns OK, then the address is not accepted.
-        txn.results.add(plugin, {msg: "rcpt." + qmd_r[1]});
-        return next(CONT, qmd_r[1]);
+        txn.results.add(plugin, {msg: "rcpt." + dst_type});
+        return next(CONT, dst_type);
     });
 };
 
 exports.get_qmd_response = function (connection, domain, email, cb) {
-    var plugin = this;
+    const plugin = this;
 
-    var options = {
+    let cfg = plugin.cfg[domain];
+    if (cfg === undefined) cfg = plugin.cfg.main;
+
+    let options = {
         method: 'get',
-        host: '127.0.0.1',
-        port: 8998,
+        host: cfg.host || '127.0.0.1',
+        port: cfg.port || 8998,
     };
-
-    if (plugin.cfg[domain]) {
-        if (plugin.cfg[domain].host) options.host = plugin.cfg[domain].host;
-        if (plugin.cfg[domain].port) options.host = plugin.cfg[domain].port;
-    }
-    else {
-        if (plugin.cfg.main.host) options.host = plugin.cfg.main.host;
-        if (plugin.cfg.main.port) options.port = plugin.cfg.main.port;
-    }
 
     // redundant
     // connection.transaction.results.add(plugin, {
@@ -219,4 +242,43 @@ exports.check_qmd_response = function (connection, hexnum) {
         default:
             return [ undefined, "unknown rv(" + hexnum + ")" ];
     }
+};
+
+exports.hook_queue = function (next, connection) {
+
+    const wants = connection.transaction.notes.get('queue.wants');
+    if (wants && wants !== 'lmtp') return next();
+
+    this.logdebug('QMD routing to outbound');
+    outbound.send_email(connection.transaction, next);
+}
+
+exports.hook_get_mx = function (next, hmail, domain) {
+    const plugin = this;
+
+    if (hmail.todo.notes.get('queue.wants') !== 'lmtp') return next();
+
+    let cfg = plugin.cfg[domain.toLowerCase()];
+    if (cfg === undefined) cfg = plugin.cfg.main;
+
+    const mx = {
+        using_lmtp: true,
+        priority: 0,
+        port: 24,
+        exchange: cfg.host,
+    };
+
+    if (cfg.next_hop) {
+        const dest = url.parse(cfg.next_hop);
+        if (dest.hostname) mx.exchange = dest.hostname;
+        if (dest.port) mx.port = dest.port;
+        if (dest.auth) {
+            mx.auth_type = 'plain';
+            mx.auth_user = dest.auth.split(':')[0];
+            mx.auth_pass = dest.auth.split(':')[1];
+        }
+    }
+
+    plugin.logdebug(mx);
+    return next(OK, mx);
 };
