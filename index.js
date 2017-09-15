@@ -8,7 +8,7 @@ const url         = require('url');
 let outbound;
 
 exports.register = function () {
-    let plugin = this;
+    const plugin = this;
 
     plugin.load_qmd_ini();
 
@@ -23,28 +23,28 @@ exports.register = function () {
 };
 
 exports.load_qmd_ini = function () {
-    let plugin = this;
+    const plugin = this;
     plugin.cfg = plugin.config.get('qmail-deliverable.ini', function () {
         plugin.load_qmd_ini();
     });
 };
 
 exports.check_mail_from = function (next, connection, params) {
-    let plugin = this;
+    const plugin = this;
 
     if (!plugin.cfg.main.check_outbound) return next();
 
     // determine if MAIL FROM domain is local
-    let txn = connection.transaction;
+    const txn = connection.transaction;
 
-    let email = params[0].address();
+    const email = params[0].address();
     if (!email) {
         // likely an IP with relaying permission
         txn.results.add(plugin, {skip: 'mail_from.null', emit: true});
         return next();
     }
 
-    let domain = params[0].host.toLowerCase();
+    const domain = params[0].host.toLowerCase();
 
     plugin.get_qmd_response(connection, domain, email, function (err, qmd_r) {
         if (err) {
@@ -167,7 +167,7 @@ exports.get_qmd_response = function (connection, domain, email, cb) {
     let cfg = plugin.cfg[domain];
     if (cfg === undefined) cfg = plugin.cfg.main;
 
-    let options = {
+    const options = {
         method: 'get',
         host: cfg.host || '127.0.0.1',
         port: cfg.port || 8998,
@@ -187,8 +187,8 @@ exports.get_qmd_response = function (connection, domain, email, cb) {
         res.setEncoding('utf8');
         res.on('data', function (chunk) {
             connection.logprotocol(plugin, 'BODY: ' + chunk);
-            var hexnum = new Number(chunk).toString(16);
-            var arr = plugin.check_qmd_response(connection, hexnum);
+            const hexnum = new Number(chunk).toString(16);
+            const arr = plugin.check_qmd_response(connection, hexnum);
             connection.loginfo(plugin, arr[1]);
             cb(undefined, arr);
 
@@ -199,7 +199,7 @@ exports.get_qmd_response = function (connection, domain, email, cb) {
 };
 
 exports.check_qmd_response = function (connection, hexnum) {
-    var plugin = this;
+    const plugin = this;
     connection.logprotocol(plugin,"HEXRV: " + hexnum );
 
     switch (hexnum) {
@@ -209,12 +209,13 @@ exports.check_qmd_response = function (connection, hexnum) {
             return [ OK, "qmail-command in dot-qmail"];
         case '13':
             return [ OK, "bouncesaying with program"];
-        case '14':
-            var from = connection.transaction.mail_from.address();
+        case '14': {
+            const from = connection.transaction.mail_from.address();
             if ( ! from || from === '<>') {
                 return [ DENY, "mailing lists do not accept null senders" ];
             }
             return [ OK, "ezmlm list" ];
+        }
         case '21':
             return [ DENYSOFT, "Temporarily undeliverable: group/world writable" ];
         case '22':
