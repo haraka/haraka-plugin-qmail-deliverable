@@ -1,3 +1,7 @@
+## 1.0.3 - 2017-09-26
+
+- use correct name of mail hook
+- update loginfo to use get and avoid undef crash
 
 ## 1.0.2 - 2017-09-01
 

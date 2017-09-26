@@ -39,7 +39,15 @@ exports.register = {
         this.plugin.register();
         test.ok(this.plugin.cfg.main.check_outbound);
         test.done();
+    },
+    'registers the mail hook' : function (test) {
+        test.expect(1);
+        this.plugin.register();
+        test.equal(this.plugin.register_hook.args[0], 'mail');
+        // console.log(this.plugin);
+        test.done();
     }
+
 }
 
 exports.get_next_hop = {
