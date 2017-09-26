@@ -18,7 +18,7 @@ exports.register = function () {
     }
 
     if (plugin.cfg.main.check_outbound) {
-        plugin.register_hook('hook_mail', 'check_mail_from');
+        plugin.register_hook('mail', 'check_mail_from');
     }
 };
 
@@ -133,7 +133,8 @@ exports.hook_rcpt = function (next, connection, params) {
         if (connection.relaying && txn.notes.local_sender) {
             txn.results.add(plugin, {pass: "relaying local_sender"});
             plugin.set_queue(connection, 'outbound');
-            connection.loginfo(`queue: ${txn.queue.wanted}`);
+            const q = txn.notes.get('queue.wants');
+            if (q) connection.loginfo(`queue: ${q}`);
             return next(OK);
         }
 
