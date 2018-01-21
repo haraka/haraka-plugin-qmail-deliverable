@@ -249,7 +249,7 @@ exports.check_qmd_response = function (connection, hexnum) {
 exports.hook_queue = function (next, connection) {
 
     const wants = connection.transaction.notes.get('queue.wants');
-    if (wants && wants !== 'lmtp') return next();
+    if (wants !== 'lmtp') return next();
 
     this.logdebug('QMD routing to outbound');
     outbound.send_email(connection.transaction, next);
