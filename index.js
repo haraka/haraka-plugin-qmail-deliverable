@@ -91,6 +91,7 @@ exports.set_queue = function (connection, queue_wanted, domain) {
     if (!queue_wanted) return true;
 
     const txn = connection.transaction;
+    if (!txn) return;
     const next_hop = plugin.get_next_hop(dom_cfg, queue_wanted);
 
     if (!txn.notes.get('queue.wants')) {

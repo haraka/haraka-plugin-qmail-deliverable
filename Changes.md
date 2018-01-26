@@ -1,3 +1,9 @@
+
+## 1.0.5 - 2018-01-26
+
+- assure transaction still exists before trying to access txn.notes
+
+
 ## 1.0.4 - 2018-01-20
 
 - tighten up LMTP routing to only when explicitely set
