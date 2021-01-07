@@ -1,4 +1,17 @@
 
+## 1.1.0 - 2021-01-06
+
+- lint: es6 prefer-template
+- lint: es6 object-shorthand
+- lint: es6 interpolated strings
+- drop node 8 & 10 testing, add 14
+
+
+## 1.0.6 - 2018-12-20
+
+- set txn.notes.local_recipient
+
+
 ## 1.0.5 - 2018-01-26
 
 - assure transaction still exists before trying to access txn.notes

@@ -24,7 +24,7 @@ const _set_up_cfg = function (done) {
 
 exports.load_qmd_ini = {
     setUp : _set_up,
-    'loads config' : function (test) {
+    'loads config' (test) {
         test.expect(1);
         this.plugin.load_qmd_ini();
         test.ok(this.plugin.cfg.main.check_outbound);
@@ -34,13 +34,13 @@ exports.load_qmd_ini = {
 
 exports.register = {
     setUp : _set_up,
-    'loads the config' : function (test) {
+    'loads the config' (test) {
         test.expect(1);
         this.plugin.register();
         test.ok(this.plugin.cfg.main.check_outbound);
         test.done();
     },
-    'registers the mail hook' : function (test) {
+    'registers the mail hook' (test) {
         test.expect(1);
         this.plugin.register();
         test.equal(this.plugin.register_hook.args[0], 'mail');
@@ -52,7 +52,7 @@ exports.register = {
 
 exports.get_next_hop = {
     setUp : _set_up_cfg,
-    'wants_queue=empty sets smtp://' : function (test) {
+    'wants_queue=empty sets smtp://' (test) {
         test.expect(1);
         const testConfig = {
             host: '1.2.3.5',
@@ -63,7 +63,7 @@ exports.get_next_hop = {
         );
         test.done();
     },
-    'wants_queue=lmtp sets lmtp://' : function (test) {
+    'wants_queue=lmtp sets lmtp://' (test) {
         test.expect(1);
         const testConfig = {
             host: '1.2.3.5',
@@ -78,7 +78,7 @@ exports.get_next_hop = {
 
 exports.set_queue = {
     setUp : _set_up_cfg,
-    'wants_queue=empty sets none' : function (test) {
+    'wants_queue=empty sets none' (test) {
         test.expect(3);
         this.plugin.cfg = {
             'example.com': { host: '1.2.3.4' },
@@ -91,7 +91,7 @@ exports.set_queue = {
         test.equal(this.connection.transaction.notes.get('queue.next_hop'), undefined);
         test.done();
     },
-    'wants_queue=smtp_forward sets txn.notes.queue.wants & queue.next_hop': function (test) {
+    'wants_queue=smtp_forward sets txn.notes.queue.wants & queue.next_hop' (test) {
         test.expect(3);
         this.plugin.cfg = {
             'example.com': { host: '1.2.3.4' },
@@ -104,7 +104,7 @@ exports.set_queue = {
         test.equal(this.connection.transaction.notes.get('queue.next_hop'), 'smtp://1.2.3.4');
         test.done();
     },
-    'wants_queue=lmtp sets txn.queue.wants & queue.next_hop': function (test) {
+    'wants_queue=lmtp sets txn.queue.wants & queue.next_hop' (test) {
         test.expect(3);
         this.plugin.cfg = {
             'example.com': { host: '1.2.3.5' },
@@ -121,7 +121,7 @@ exports.set_queue = {
 
 exports.get_qmd_response = {
     setUp : _set_up,
-    'stub' : function (test) {
+    'stub' (test) {
         test.expect(0);
         // can't really test this very well without a QMD server
         test.done();
@@ -130,25 +130,25 @@ exports.get_qmd_response = {
 
 exports.check_qmd_response = {
     setUp : _set_up,
-    '11' : function (test) {
+    '11' (test) {
         test.expect(1);
         const r = this.plugin.check_qmd_response(this.connection, '11');
         test.equal(DENYSOFT, r[0]);
         test.done();
     },
-    '12' : function (test) {
+    '12' (test) {
         test.expect(1);
         const r = this.plugin.check_qmd_response(this.connection, '12');
         test.equal(OK, r[0]);
         test.done();
     },
-    '13' : function (test) {
+    '13' (test) {
         test.expect(1);
         const r = this.plugin.check_qmd_response(this.connection, '13');
         test.equal(OK, r[0]);
         test.done();
     },
-    '14' : function (test) {
+    '14' (test) {
         test.expect(2);
         this.connection.transaction = {
             mail_from: new Address.Address('<matt@example.com>'),
@@ -161,80 +161,80 @@ exports.check_qmd_response = {
         test.equal(DENY, r[0]);
         test.done();
     },
-    '21' : function (test) {
+    '21' (test) {
         test.expect(1);
         const r = this.plugin.check_qmd_response(this.connection, '21');
         test.equal(DENYSOFT, r[0]);
         test.done();
     },
-    '22' : function (test) {
+    '22' (test) {
         test.expect(1);
         const r = this.plugin.check_qmd_response(this.connection, '22');
         test.equal(DENYSOFT, r[0]);
         test.done();
     },
-    '2f' : function (test) {
+    '2f' (test) {
         test.expect(1);
         const r = this.plugin.check_qmd_response(this.connection, '2f');
         test.equal(DENYSOFT, r[0]);
         test.done();
     },
-    'f1' : function (test) {
+    'f1' (test) {
         test.expect(1);
         const r = this.plugin.check_qmd_response(this.connection, 'f1');
         test.equal(OK, r[0]);
         test.done();
     },
-    'f2' : function (test) {
+    'f2' (test) {
         test.expect(1);
         const r = this.plugin.check_qmd_response(this.connection, 'f2');
         test.equal(OK, r[0]);
         test.done();
     },
-    'f3' : function (test) {
+    'f3' (test) {
         test.expect(1);
         const r = this.plugin.check_qmd_response(this.connection, 'f3');
         test.equal(OK, r[0]);
         test.done();
     },
-    'f4' : function (test) {
+    'f4' (test) {
         test.expect(1);
         const r = this.plugin.check_qmd_response(this.connection, 'f4');
         test.equal(OK, r[0]);
         test.done();
     },
-    'f5' : function (test) {
+    'f5' (test) {
         test.expect(1);
         const r = this.plugin.check_qmd_response(this.connection, 'f5');
         test.equal(OK, r[0]);
         test.done();
     },
-    'f6' : function (test) {
+    'f6' (test) {
         test.expect(1);
         const r = this.plugin.check_qmd_response(this.connection, 'f6');
         test.equal(OK, r[0]);
         test.done();
     },
-    'fe' : function (test) {
+    'fe' (test) {
         test.expect(1);
         const r = this.plugin.check_qmd_response(this.connection, 'fe');
         test.equal(DENYSOFT, r[0]);
         test.done();
     },
-    'ff' : function (test) {
+    'ff' (test) {
         test.expect(1);
         const r = this.plugin.check_qmd_response(this.connection, 'ff');
         test.equal(DENY, r[0]);
         test.done();
     },
-    '0' : function (test) {
+    '0' (test) {
         test.expect(2);
         const r = this.plugin.check_qmd_response(this.connection, '0');
         test.equal(DENY, r[0]);
         test.equal('not deliverable', r[1]);
         test.done();
     },
-    'blah' : function (test) {
+    'blah' (test) {
         test.expect(1);
         const r = this.plugin.check_qmd_response(this.connection, 'blah');
         test.equal(undefined, r[0]);
