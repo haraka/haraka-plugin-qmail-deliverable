@@ -94,6 +94,7 @@ exports.set_queue = function (connection, queue_wanted, domain) {
     const next_hop = plugin.get_next_hop(dom_cfg, queue_wanted);
 
     if (!txn.notes.get('queue.wants')) {
+        txn.results.add(plugin, {msg: `setting queue.wants=${queue_wanted}, ${next_hop}`})
         txn.notes.set('queue.wants', queue_wanted);
         txn.notes.set('queue.next_hop', next_hop);
         return true;
@@ -140,7 +141,7 @@ exports.hook_rcpt = function (next, connection, params) {
 
         if (r_code === OK) {
             txn.notes.local_recipient=domain;
-            txn.results.add(plugin, {pass: `rcpt.${  dst_type}`, emit: true });
+            txn.results.add(plugin, {pass: `rcpt.${dst_type}`, emit: true });
             let queue = dom_cfg.queue;
             if (dst_type === 'vpopmail dir' && dom_cfg.next_hop) {
                 if (/^lmtp/.test(dom_cfg.next_hop)) queue = 'lmtp';
