@@ -1,3 +1,21 @@
+### Unreleased
+
+
+## 1.1.0 - 2021-01-06
+
+- ci: use shared GHA workflows
+- feat: set txt.notes.local_sender & local_recipient
+- test: replace nodeunit with mocha
+- lint: es6 prefer-template
+- lint: es6 object-shorthand
+- lint: es6 interpolated strings
+- drop node 8 & 10 testing, add 14
+
+
+## 1.0.6 - 2018-12-20
+
+- set txn.notes.local_recipient
+
 
 ## 1.0.5 - 2018-01-26
 
@@ -24,3 +42,6 @@
 ## 1.0.1 - 2017-08-29
 
 - initial release
+
+
+[1.1.0]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/1.1.0

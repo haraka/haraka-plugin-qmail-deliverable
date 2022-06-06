@@ -8,26 +8,25 @@ const url         = require('url');
 let outbound;
 
 exports.register = function () {
-    const plugin = this;
 
-    plugin.load_qmd_ini();
+    this.load_qmd_ini();
 
     if (process.env.HARAKA) {
         // permit testing outside of Haraka
         outbound = this.haraka_require('outbound');
     }
 
-    if (plugin.cfg.main.check_outbound) {
-        plugin.register_hook('mail', 'check_mail_from');
+    if (this.cfg.main.check_outbound) {
+        this.register_hook('mail', 'check_mail_from');
     }
-};
+}
 
 exports.load_qmd_ini = function () {
-    const plugin = this;
+    const plugin = this
     plugin.cfg = plugin.config.get('qmail-deliverable.ini', function () {
-        plugin.load_qmd_ini();
-    });
-};
+        plugin.load_qmd_ini()
+    })
+}
 
 exports.check_mail_from = function (next, connection, params) {
     const plugin = this;
@@ -46,28 +45,28 @@ exports.check_mail_from = function (next, connection, params) {
 
     const domain = params[0].host.toLowerCase();
 
-    plugin.get_qmd_response(connection, domain, email, function (err, qmd_r) {
+    plugin.get_qmd_response(connection, domain, email, (err, qmd_r) => {
         if (err) {
-            txn.results.add(plugin, {err: err});
+            txn.results.add(plugin, {err});
             return next(DENYSOFT, err);
         }
 
         // the MAIL FROM sender is verified as a local address
         if (qmd_r[0] === OK) {
-            txn.results.add(plugin, {pass: "mail_from." + qmd_r[1]});
-            txn.notes.local_sender=true;
+            txn.results.add(plugin, { pass: `mail_from.${qmd_r[1]}` });
+            txn.notes.local_sender=domain;
             return next();
         }
 
         if (qmd_r[0] === undefined) {
-            txn.results.add(plugin, {err: "mail_from." + qmd_r[1]});
+            txn.results.add(plugin, { err: `mail_from.${qmd_r[1]}` });
             return next();
         }
 
-        txn.results.add(plugin, {msg: "mail_from." + qmd_r[1]});
-        return next(CONT, "mail_from." + qmd_r[1]);
-    });
-};
+        txn.results.add(plugin, {msg: `mail_from.${qmd_r[1]}`});
+        return next(CONT, `mail_from.${qmd_r[1]}`);
+    })
+}
 
 exports.get_next_hop = function (dom_cfg, queue_wanted) {
 
@@ -75,9 +74,9 @@ exports.get_next_hop = function (dom_cfg, queue_wanted) {
 
     switch (queue_wanted) {
         case 'lmtp':
-            return ('lmtp://' + dom_cfg.host);
+            return (`lmtp://${dom_cfg.host}`);
         default:
-            return ('smtp://' + dom_cfg.host);
+            return (`smtp://${dom_cfg.host}`);
     }
 }
 
@@ -95,6 +94,7 @@ exports.set_queue = function (connection, queue_wanted, domain) {
     const next_hop = plugin.get_next_hop(dom_cfg, queue_wanted);
 
     if (!txn.notes.get('queue.wants')) {
+        txn.results.add(plugin, {msg: `setting queue.wants=${queue_wanted}, ${next_hop}`})
         txn.notes.set('queue.wants', queue_wanted);
         txn.notes.set('queue.next_hop', next_hop);
         return true;
@@ -121,9 +121,9 @@ exports.hook_rcpt = function (next, connection, params) {
 
     // Qmail::Deliverable::Client does a rfc2822 "atext" test
     // but Haraka has already validated for us by this point
-    plugin.get_qmd_response(connection, domain, rcpt.address(), function (err, qmd_r) {
+    plugin.get_qmd_response(connection, domain, rcpt.address(), (err, qmd_r) => {
         if (err) {
-            txn.results.add(plugin, {err: err});
+            txn.results.add(plugin, {err});
             return next(DENYSOFT, "error validating email address");
         }
 
@@ -140,7 +140,8 @@ exports.hook_rcpt = function (next, connection, params) {
         }
 
         if (r_code === OK) {
-            txn.results.add(plugin, {pass: "rcpt." + dst_type, emit: true });
+            txn.notes.local_recipient=domain;
+            txn.results.add(plugin, {pass: `rcpt.${dst_type}`, emit: true });
             let queue = dom_cfg.queue;
             if (dst_type === 'vpopmail dir' && dom_cfg.next_hop) {
                 if (/^lmtp/.test(dom_cfg.next_hop)) queue = 'lmtp';
@@ -152,16 +153,16 @@ exports.hook_rcpt = function (next, connection, params) {
         }
 
         if (r_code === undefined) {
-            txn.results.add(plugin, {err: "rcpt." + dst_type});
+            txn.results.add(plugin, {err: `rcpt.${  dst_type}`});
             return next();
         }
 
         // no need to DENY[SOFT] for invalid addresses. If no rcpt_to.* plugin
         // returns OK, then the address is not accepted.
-        txn.results.add(plugin, {msg: "rcpt." + dst_type});
+        txn.results.add(plugin, {msg: `rcpt.${  dst_type}`});
         return next(CONT, dst_type);
     });
-};
+}
 
 exports.get_qmd_response = function (connection, domain, email, cb) {
     const plugin = this;
@@ -180,15 +181,15 @@ exports.get_qmd_response = function (connection, domain, email, cb) {
     //     msg: "sock: " + options.host + ':' + options.port
     // });
 
-    connection.logdebug(plugin, "checking " + email);
-    options.path = '/qd1/deliverable?' + querystring.escape(email);
+    connection.logdebug(plugin, `checking ${  email}`);
+    options.path = `/qd1/deliverable?${  querystring.escape(email)}`;
     // connection.logdebug(plugin, 'PATH: ' + options.path);
     http.get(options, function (res) {
-        connection.logprotocol(plugin, 'STATUS: ' + res.statusCode);
-        connection.logprotocol(plugin, 'HEADERS: ' + JSON.stringify(res.headers));
+        connection.logprotocol(plugin, `STATUS: ${  res.statusCode}`);
+        connection.logprotocol(plugin, `HEADERS: ${  JSON.stringify(res.headers)}`);
         res.setEncoding('utf8');
         res.on('data', function (chunk) {
-            connection.logprotocol(plugin, 'BODY: ' + chunk);
+            connection.logprotocol(plugin, `BODY: ${  chunk}`);
             const hexnum = new Number(chunk).toString(16);
             const arr = plugin.check_qmd_response(connection, hexnum);
             connection.loginfo(plugin, arr[1]);
@@ -198,11 +199,11 @@ exports.get_qmd_response = function (connection, domain, email, cb) {
     }).on('error', (err) => {
         return cb(err);
     });
-};
+}
 
 exports.check_qmd_response = function (connection, hexnum) {
     const plugin = this;
-    connection.logprotocol(plugin,"HEXRV: " + hexnum );
+    connection.logprotocol(plugin,`HEXRV: ${  hexnum}` );
 
     switch (hexnum) {
         case '11':
@@ -243,9 +244,9 @@ exports.check_qmd_response = function (connection, hexnum) {
         case '0':
             return [ DENY, "not deliverable" ];
         default:
-            return [ undefined, "unknown rv(" + hexnum + ")" ];
+            return [ undefined, `unknown rv(${  hexnum  })` ];
     }
-};
+}
 
 exports.hook_queue = function (next, connection) {
 
@@ -284,4 +285,4 @@ exports.hook_get_mx = function (next, hmail, domain) {
 
     plugin.logdebug(mx);
     return next(OK, mx);
-};
+}
