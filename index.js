@@ -22,10 +22,10 @@ exports.register = function () {
 }
 
 exports.load_qmd_ini = function () {
-
-    this.cfg = this.config.get('qmail-deliverable.ini', () => {
-        this.load_qmd_ini();
-    });
+    const plugin = this
+    plugin.cfg = plugin.config.get('qmail-deliverable.ini', function () {
+        plugin.load_qmd_ini()
+    })
 }
 
 exports.check_mail_from = function (next, connection, params) {
