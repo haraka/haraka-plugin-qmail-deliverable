@@ -3,6 +3,8 @@
 
 ## 1.1.0 - 2021-01-06
 
+- ci: use shared GHA workflows
+- test: replace nodeunit with mocha
 - lint: es6 prefer-template
 - lint: es6 object-shorthand
 - lint: es6 interpolated strings
@@ -39,4 +41,6 @@
 ## 1.0.1 - 2017-08-29
 
 - initial release
+
+
 [1.1.0]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/1.1.0
