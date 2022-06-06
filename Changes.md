@@ -4,6 +4,7 @@
 ## 1.1.0 - 2021-01-06
 
 - ci: use shared GHA workflows
+- feat: set txt.notes.local_sender & local_recipient
 - test: replace nodeunit with mocha
 - lint: es6 prefer-template
 - lint: es6 object-shorthand
