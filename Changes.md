@@ -1,6 +1,12 @@
 ### Unreleased
 
 
+### [1.1.1] - 2022-11-29
+
+- ci: only publish when package.json has changes
+- feat: decrease a log message severity
+
+
 ## 1.1.0 - 2021-01-06
 
 - ci: use shared GHA workflows
@@ -45,3 +51,4 @@
 
 
 [1.1.0]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/1.1.0
+[1.1.1]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/1.1.1

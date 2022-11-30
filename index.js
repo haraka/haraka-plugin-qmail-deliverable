@@ -39,7 +39,7 @@ exports.check_mail_from = function (next, connection, params) {
     const email = params[0].address();
     if (!email) {
         // likely an IP with relaying permission
-        txn.results.add(plugin, {skip: 'mail_from.null', emit: true});
+        txn.results.add(plugin, { skip: 'mail_from.null', emit: true });
         return next();
     }
 
@@ -63,7 +63,7 @@ exports.check_mail_from = function (next, connection, params) {
             return next();
         }
 
-        txn.results.add(plugin, {msg: `mail_from.${qmd_r[1]}`});
+        txn.results.add(plugin, { msg: `mail_from.${qmd_r[1]}` });
         return next(CONT, `mail_from.${qmd_r[1]}`);
     })
 }
@@ -123,7 +123,7 @@ exports.hook_rcpt = function (next, connection, params) {
     // but Haraka has already validated for us by this point
     plugin.get_qmd_response(connection, domain, rcpt.address(), (err, qmd_r) => {
         if (err) {
-            txn.results.add(plugin, {err});
+            txn.results.add(plugin, { err });
             return next(DENYSOFT, "error validating email address");
         }
 
@@ -181,7 +181,7 @@ exports.get_qmd_response = function (connection, domain, email, cb) {
     //     msg: "sock: " + options.host + ':' + options.port
     // });
 
-    connection.logdebug(plugin, `checking ${  email}`);
+    connection.logdebug(plugin, `checking ${email}`);
     options.path = `/qd1/deliverable?${  querystring.escape(email)}`;
     // connection.logdebug(plugin, 'PATH: ' + options.path);
     http.get(options, function (res) {
@@ -192,13 +192,11 @@ exports.get_qmd_response = function (connection, domain, email, cb) {
             connection.logprotocol(plugin, `BODY: ${  chunk}`);
             const hexnum = new Number(chunk).toString(16);
             const arr = plugin.check_qmd_response(connection, hexnum);
-            connection.loginfo(plugin, arr[1]);
+            connection.logdebug(plugin, arr[1]);
             cb(undefined, arr);
 
         });
-    }).on('error', (err) => {
-        return cb(err);
-    });
+    }).on('error', cb)
 }
 
 exports.check_qmd_response = function (connection, hexnum) {
