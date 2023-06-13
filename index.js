@@ -138,6 +138,7 @@ exports.do_qmd_response = function (qmd_res, connection, rcpt, next) {
 
     if (this.is_split(txn, queue, next_hop)) {
         if (dom_cfg?.split === 'defer') {
+            if (connection.relaying) return do_relaying(this, txn, next)
             return next(DENYSOFT, "Split transaction, retry soon");
         }
         txn.results.add(this, {msg: `split queue.wants=outbound`, emit: true})
