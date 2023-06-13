@@ -16,7 +16,7 @@ exports.register = function () {
         outbound = this.haraka_require('outbound');
     }
 
-    if (this.cfg.main.check_outbound || this.cfg.main.check_mail_from) {
+    if (this.cfg.main.check_mail_from) {
         this.register_hook('mail', 'check_mail_from');
     }
 }
@@ -25,11 +25,17 @@ exports.load_qmd_ini = function () {
     this.cfg = this.config.get('qmail-deliverable.ini', {
         booleans: [
             '+main.check_mail_from',
+            '*.check_mail_from',
         ]
     },
     function () {
         this.load_qmd_ini()
     })
+
+    if (this.cfg.main.check_outbound !== undefined) {
+        // backwards compat
+        this.cfg.main.check_mail_from = this.cfg.main.check_outbound
+    }
 }
 
 exports.check_mail_from = function (next, connection, params) {
@@ -73,6 +79,8 @@ exports.check_mail_from = function (next, connection, params) {
 
 function do_relaying (plugin, txn, next) {
     // any RCPT is acceptable for txns with relaying privileges
+    // this is called in several places where errors or non-local rcpt would
+    // otherwise not be allowed
     txn.results.add(plugin, {pass: `relaying${txn.notes.local_sender ? ' local sender' : ''}`});
     txn.notes.set('queue.wants', 'outbound');
     next(OK);

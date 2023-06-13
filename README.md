@@ -17,15 +17,15 @@ altering the contents of `config/qmail-deliverable.ini`
 
 * `port` (Default: 8998)
 
-* `check_mail_from`=true
+* `check_mail_from`= (Default: true)
 
 When `check_mail_from` is enabled, the MAIL FROM address is checked for deliverability. The deliverable status can be inspected by checking `transaction.notes.local_sender`.
 
-Domains can also specify MX routing by defining `queue` and `next_hop`.
+MX routing for individual domains can be set by defining `queue` and `next_hop`.
 
 * `queue`: a queue plugin (smtp_forward, qmail-queue), or lmtp. When `queue=lmtp`, if qmail-deliverable reports that the destination address is a mailbox (ie, not email list, forward, alias, etc.), then this plugin will configure the next_hop to be `lmtp://$host/` and will set up that route (via get_mx) so that outbound delivers the message to the mailbox via LMTP.
 
-* `next_hop`: a URL. Examples: `smtp://mx.example.com` and `lmtp://int.mx.example.com`
+* `next_hop`: a URL. Examples: `smtp://mx.example.com` and `lmtp://int.mx.example.com:24`
 
 
 ## Per-domain Configuration
