@@ -262,7 +262,7 @@ describe('decode_qmd_response', function () {
     })
 })
 
-describe.only('hook_get_mx', function () {
+describe('hook_get_mx', function () {
     beforeEach(_set_up_cfg)
 
     it('returns nothing unless queue.wants=lmtp', function (done) {
@@ -284,10 +284,10 @@ describe.only('hook_get_mx', function () {
         this.plugin.hook_get_mx((code, mx) => {
             assert.equal(code, OK)
             assert.deepEqual(mx, {
-                  exchange: '127.0.0.1',
-                  port: 24,
-                  priority: 0,
-                  using_lmtp: true
+                exchange: '127.0.0.1',
+                port: 24,
+                priority: 0,
+                using_lmtp: true
             })
             done()
         }, hmail, 'example.com')
@@ -302,13 +302,12 @@ describe.only('hook_get_mx', function () {
         this.plugin.hook_get_mx((code, mx) => {
             assert.equal(code, OK)
             assert.deepEqual(mx, {
-                  exchange: '127.1.1.1',
-                  port: 23,
-                  priority: 0,
-                  using_lmtp: true
+                exchange: '127.1.1.1',
+                port: 23,
+                priority: 0,
+                using_lmtp: true
             })
             done()
         }, hmail, 'example.com')
     })
-
 })
