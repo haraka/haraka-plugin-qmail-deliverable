@@ -111,7 +111,7 @@ exports.do_qmd_response = function (qmd_res, txn, rcpt, next) {
     }
 
     const domain = rcpt.host.toLowerCase();
-    let dom_cfg = this.cfg[domain] || this.cfg.main;
+    const dom_cfg = this.cfg[domain] || this.cfg.main;
 
     txn.notes.local_recipient=domain;
     txn.results.add(this, {pass: `rcpt.${dst_type}` });

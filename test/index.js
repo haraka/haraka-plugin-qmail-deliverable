@@ -15,7 +15,7 @@ function _set_up_cfg () {
     this.connection = new fixtures.connection.createConnection();
     this.connection.transaction = new fixtures.transaction.createTransaction();
     this.plugin.register();
-};
+}
 
 describe('load_qmd_ini', function () {
     beforeEach(_set_up)
