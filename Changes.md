@@ -3,8 +3,11 @@
 
 ### [1.2.0] - 2023-06-12
 
-- previously, would set a lmtp next_hop w/o setting q.wants=lmtp
+- previously, would set next_hop=lmtp w/o setting q.wants=lmtp
 - refactored, added many tests
+- rename check_outbound -> check_mail_from
+- doc: added queue.wants & next_hop
+- chore: replace url.parse with new url.URL()
 
 
 ### [1.1.1] - 2022-11-29

@@ -257,7 +257,7 @@ exports.hook_queue = function (next, connection) {
     switch (qw) {
         case 'lmtp':
         case 'outbound':
-            this.loginfo(`routing local recipient to outbound: ${qw}`);
+            this.loginfo(`routing to outbound: queue.wants=${qw}`);
             outbound.send_email(connection.transaction, next);
             break;
         default:
@@ -274,20 +274,20 @@ exports.hook_get_mx = function (next, hmail, domain) {
         priority: 0,
         port: 24,
         exchange: this.get_host(domain.toLowerCase()),
-    };
+    }
 
-    const nh = this.get_next_hop(domain.toLowerCase())
+    const nh = hmail.todo.notes.get('queue.next_hop')
     if (nh) {
-        const dest = url.parse(nh);
-        if (dest.hostname) mx.exchange = dest.hostname;
-        if (dest.port) mx.port = dest.port;
+        const dest = new url.URL(nh)
+        if (dest.hostname) mx.exchange = dest.hostname
+        if (dest.port) mx.port = dest.port
         if (dest.auth) {
-            mx.auth_type = 'plain';
-            mx.auth_user = dest.auth.split(':')[0];
-            mx.auth_pass = dest.auth.split(':')[1];
+            mx.auth_type = 'plain'
+            mx.auth_user = dest.auth.split(':')[0]
+            mx.auth_pass = dest.auth.split(':')[1]
         }
     }
 
-    this.logdebug(mx);
-    next(OK, mx);
+    this.logdebug(mx)
+    next(OK, mx)
 }

@@ -2,13 +2,13 @@
 
 const assert = require('assert')
 
-const Address      = require('address-rfc2821');
-const fixtures     = require('haraka-test-fixtures');
+const Address  = require('address-rfc2821')
+const fixtures = require('haraka-test-fixtures')
 
-const _set_up = function () {
+function _set_up () {
     this.plugin = new fixtures.plugin('qmail-deliverable');
     this.connection = new fixtures.connection.createConnection();
-};
+}
 
 function _set_up_cfg () {
     this.plugin = new fixtures.plugin('qmail-deliverable');
@@ -57,7 +57,6 @@ describe('get_host', function () {
         this.plugin.cfg = { main: { host: '127.1.1.1' }, 'example.com': { host: '127.2.2.2' }}
         assert.equal(this.plugin.get_host('example.com'), '127.2.2.2')
     })
-
 })
 
 describe('do_qmd_response', function () {
@@ -177,9 +176,8 @@ describe('do_qmd_response', function () {
 describe('get_qmd_response', function () {
     beforeEach(_set_up)
 
-    it('stub', function (done) {
-        // can't really test this very well without a QMD server
-        done()
+    it('stub', function () {
+        // can't test this well without a QMD server
     })
 })
 
@@ -262,4 +260,55 @@ describe('decode_qmd_response', function () {
         const r = this.plugin.decode_qmd_response(this.connection, 'blah');
         assert.equal(undefined, r[0]);
     })
+})
+
+describe.only('hook_get_mx', function () {
+    beforeEach(_set_up_cfg)
+
+    it('returns nothing unless queue.wants=lmtp', function (done) {
+        const hmail = new fixtures.transaction.createTransaction()
+        hmail.todo = { notes: hmail.notes }
+
+        this.plugin.hook_get_mx((code, msg) => {
+            assert.equal(code, undefined)
+            assert.equal(msg, undefined)
+            done()
+        }, hmail, 'example.com')
+    })
+
+    it('returns MX when queue.wants=lmtp', function (done) {
+        const hmail = new fixtures.transaction.createTransaction()
+        hmail.todo = { notes: hmail.notes }
+        hmail.todo.notes.set('queue.wants', 'lmtp')
+
+        this.plugin.hook_get_mx((code, mx) => {
+            assert.equal(code, OK)
+            assert.deepEqual(mx, {
+                  exchange: '127.0.0.1',
+                  port: 24,
+                  priority: 0,
+                  using_lmtp: true
+            })
+            done()
+        }, hmail, 'example.com')
+    })
+
+    it('MX steered by queue.next_hop', function (done) {
+        const hmail = new fixtures.transaction.createTransaction()
+        hmail.todo = { notes: hmail.notes }
+        hmail.todo.notes.set('queue.wants', 'lmtp')
+        hmail.todo.notes.set('queue.next_hop', 'lmtp://127.1.1.1:23')
+
+        this.plugin.hook_get_mx((code, mx) => {
+            assert.equal(code, OK)
+            assert.deepEqual(mx, {
+                  exchange: '127.1.1.1',
+                  port: 23,
+                  priority: 0,
+                  using_lmtp: true
+            })
+            done()
+        }, hmail, 'example.com')
+    })
+
 })
