@@ -1,6 +1,11 @@
 ### Unreleased
 
 
+### [1.2.1] - 2023-06-12
+
+- fix: use arrow fn in load_qmd_ini callback
+
+
 ### [1.2.0] - 2023-06-12
 
 - previously, would set next_hop=lmtp w/o setting q.wants=lmtp
@@ -65,3 +70,4 @@
 [1.1.0]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/1.1.0
 [1.1.1]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/1.1.1
 [1.2.0]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/1.2.0
+[1.2.1]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/1.2.1

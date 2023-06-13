@@ -28,7 +28,7 @@ exports.load_qmd_ini = function () {
             '*.check_mail_from',
         ]
     },
-    function () {
+    () => {
         this.load_qmd_ini()
     })
 
