@@ -3,32 +3,8 @@
 
 ### [1.2.0] - 2023-06-12
 
-#### Added
-
-- 
-
-#### Fixed
-
-- 
-
-#### Changed
-
-- 
-- - reduce duplicate logging messages (#14)
-- Release v1.1.0 (#13)
-- CI testing: drop node 6, add node 12
-- Merge pull request #8 from haraka/greenkeeper/update-to-node-10
-- Update to node 10 in .travis.yml
-- assure transaction still exists before trying to access txn.notes
-- Merge pull request #6 from haraka/release-1.0.4
-- tighten up LMTP routing condition
-- Merge pull request #5 from haraka/hook_mail
-- use correct name of mail hook
-- Merge pull request #4 from haraka/eslint-no-var
-- eslint no-var updates
-- Merge pull request #1 from haraka/qmd-get_mx
-- update tests too
-- updates for get/set
+- previously, would set a lmtp next_hop w/o setting q.wants=lmtp
+- refactored, added many tests
 
 
 ### [1.1.1] - 2022-11-29
