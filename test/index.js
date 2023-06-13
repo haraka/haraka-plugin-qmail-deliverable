@@ -2,28 +2,27 @@
 
 const assert = require('assert')
 
-const Address      = require('address-rfc2821');
-const fixtures     = require('haraka-test-fixtures');
+const Address  = require('address-rfc2821')
+const fixtures = require('haraka-test-fixtures')
 
-const _set_up = function () {
+function _set_up () {
     this.plugin = new fixtures.plugin('qmail-deliverable');
     this.connection = new fixtures.connection.createConnection();
-};
+}
 
-const _set_up_cfg = function () {
+function _set_up_cfg () {
     this.plugin = new fixtures.plugin('qmail-deliverable');
     this.connection = new fixtures.connection.createConnection();
     this.connection.transaction = new fixtures.transaction.createTransaction();
-    // this.connection.transaction.queue = {};
     this.plugin.register();
-};
+}
 
 describe('load_qmd_ini', function () {
     beforeEach(_set_up)
 
     it('loads config', function () {
         this.plugin.load_qmd_ini();
-        assert.ok(this.plugin.cfg.main.check_outbound);
+        assert.ok(this.plugin.cfg.main.check_mail_from);
     })
 })
 
@@ -32,7 +31,7 @@ describe('register', function () {
 
     it('loads the config', function () {
         this.plugin.register();
-        assert.ok(this.plugin.cfg.main.check_outbound);
+        assert.ok(this.plugin.cfg.main.check_mail_from);
     })
     it('registers the mail hook', function () {
         this.plugin.register();
@@ -41,159 +40,274 @@ describe('register', function () {
     })
 })
 
-describe('get_next_hop', function () {
+describe('get_host', function () {
     beforeEach(_set_up)
 
-    it('wants_queue=empty sets smtp://', function () {
-        const testConfig = {
-            host: '1.2.3.5',
-        }
-        assert.equal(
-            this.plugin.get_next_hop(testConfig),
-            'smtp://1.2.3.5'
-        );
+    it('gets default host', function () {
+        this.plugin.cfg = { main: { host: undefined } }
+        assert.equal(this.plugin.get_host('example.com'), '127.0.0.1')
     })
-    it('wants_queue=lmtp sets lmtp://', function (done) {
-        const testConfig = {
-            host: '1.2.3.5',
-        }
-        assert.equal(
-            this.plugin.get_next_hop(testConfig, 'lmtp'),
-            'lmtp://1.2.3.5'
-        );
-        done()
+
+    it('gets main host', function () {
+        this.plugin.cfg = { main: { host: '127.1.1.1' } }
+        assert.equal(this.plugin.get_host('example.com'), '127.1.1.1')
+    })
+
+    it('gets per-domain host', function () {
+        this.plugin.cfg = { main: { host: '127.1.1.1' }, 'example.com': { host: '127.2.2.2' }}
+        assert.equal(this.plugin.get_host('example.com'), '127.2.2.2')
     })
 })
 
-describe('set_queue', function () {
+describe('do_qmd_response', function () {
     beforeEach(_set_up_cfg)
+    const rcpt = new Address.Address('<user@example.com>')
 
-    it('wants_queue=empty sets none', function (done) {
+    it('queue=undefined, dir', function (done) {
         this.plugin.cfg = {
-            'example.com': { host: '1.2.3.4' },
+            main: { host: '1.2.3.4' },
         }
-        assert.equal(
-            this.plugin.set_queue(this.connection, undefined, 'example.com'),
-            true
-        );
-        assert.equal(this.connection.transaction.notes.get('queue.wants'), undefined);
-        assert.equal(this.connection.transaction.notes.get('queue.next_hop'), undefined);
-        done()
+        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
+            assert.equal(this.connection.transaction.notes.get('queue.wants'), undefined);
+            assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'smtp://1.2.3.4');
+            done()
+        })
     })
 
-    it('wants_queue=smtp_forward sets txn.notes.queue.wants & queue.next_hop', function (done) {
+    it('queue=undefined, alias', function (done) {
         this.plugin.cfg = {
-            'example.com': { host: '1.2.3.4' },
+            main: { host: '1.2.3.4' },
         }
-        assert.equal(
-            this.plugin.set_queue(this.connection, 'smtp_forward', 'example.com'),
-            true
-        );
-        assert.equal(this.connection.transaction.notes.get('queue.wants'), 'smtp_forward');
-        assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'smtp://1.2.3.4');
-        done()
+        this.plugin.do_qmd_response([OK, 'vpopmail alias'], this.connection, rcpt, (code, msg) => {
+            assert.equal(this.connection.transaction.notes.get('queue.wants'), undefined);
+            assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'smtp://1.2.3.4');
+            done()
+        })
     })
 
-    it('wants_queue=lmtp sets txn.queue.wants & queue.next_hop', function (done) {
-        this.plugin.cfg = {
-            'example.com': { host: '1.2.3.5' },
-        }
-        assert.equal(
-            this.plugin.set_queue(this.connection, 'lmtp', 'example.com'),
-            true
-        );
-        assert.equal(this.connection.transaction.notes.get('queue.wants'), 'lmtp');
-        assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'lmtp://1.2.3.5');
-        done()
+    it('example.com: queue=undefined, dir', function (done) {
+        this.plugin.cfg['example.com'] = { host: '1.2.3.4' }
+        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
+            assert.equal(this.connection.transaction.notes.get('queue.wants'), undefined);
+            assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'smtp://1.2.3.4');
+            done()
+        })
+    })
+
+    it('example.com: queue=undefined, forward', function (done) {
+        this.plugin.cfg['example.com'] = { host: '1.2.3.4' }
+        this.plugin.do_qmd_response([OK, 'vpopmail forward'], this.connection, rcpt, (code, msg) => {
+            assert.equal(this.connection.transaction.notes.get('queue.wants'), undefined);
+            assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'smtp://1.2.3.4');
+            done()
+        })
+    })
+
+    it('example.com: queue=smtp_forward', function (done) {
+        this.plugin.cfg['example.com'] = { host: '1.2.3.4', queue: 'smtp_forward' }
+        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
+            assert.equal(this.connection.transaction.notes.get('queue.wants'), 'smtp_forward');
+            assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'smtp://1.2.3.4');
+            done()
+        })
+    })
+
+    it('example.com: next_hop=lmtp sets LMTP', function (done) {
+        this.plugin.cfg.main.queue = 'smtp_forward'
+        this.plugin.cfg['example.com'] = { host: '1.2.3.4', next_hop: 'lmtp://5.6.7.8' }
+        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
+            assert.equal(this.connection.transaction.notes.get('queue.wants'), 'lmtp');
+            assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'lmtp://5.6.7.8');
+            done()
+        })
+    })
+
+    it('example.com: next_hop=lmtp + alias = smtp_forward', function (done) {
+        this.plugin.cfg.main.queue = 'smtp_forward'
+        this.plugin.cfg['example.com'] = { host: '1.2.3.4', next_hop: 'lmtp://5.6.7.8' }
+        this.plugin.do_qmd_response([OK, 'vpopmail alias'], this.connection, rcpt, (code, msg) => {
+            assert.equal(this.connection.transaction.notes.get('queue.wants'), 'smtp_forward');
+            assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'lmtp://5.6.7.8');
+            done()
+        })
+    })
+
+    it('example.com: queue=smtp_forward sets queue.wants & queue.next_hop', function (done) {
+        this.plugin.cfg['example.com'] = { host: '1.2.3.4', queue: 'smtp_forward' }
+        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
+            assert.equal(this.connection.transaction.notes.get('queue.wants'), 'smtp_forward');
+            assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'smtp://1.2.3.4');
+            done()
+        })
+    })
+
+    it('example.com: queue=lmtp sets queue.wants & queue.next_hop', function (done) {
+        this.plugin.cfg['example.com'] = { host: '1.2.3.5', queue: 'lmtp' }
+        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
+            assert.equal(this.connection.transaction.notes.get('queue.wants'), 'lmtp');
+            assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'lmtp://1.2.3.5');
+            done()
+        })
+    })
+
+    it('example.com: split txn, 1st recipient', function (done) {
+        this.plugin.cfg['example.com'] = { host: '1.2.3.5', queue: 'lmtp' }
+        this.connection.transaction.rcpt_to.push(new Address.Address('matt@other-domain.com'))
+
+        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
+            assert.equal(this.connection.transaction.notes.get('queue.wants'), 'lmtp');
+            assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'lmtp://1.2.3.5');
+            done()
+        })
+    })
+
+    it('example.com: split txn, different next_hop', function (done) {
+        this.plugin.cfg['example.com'] = { host: '1.2.3.5', queue: 'lmtp' }
+        this.connection.transaction.notes.set('queue.next_hop', 'smtp://2.3.4.5')
+
+        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
+            assert.equal(this.connection.transaction.notes.get('queue.wants'), 'outbound');
+            assert.equal(this.connection.transaction.notes.get('queue.next_hop'), undefined);
+            done()
+        })
     })
 })
 
 describe('get_qmd_response', function () {
     beforeEach(_set_up)
 
-    it('stub', function (done) {
-        // can't really test this very well without a QMD server
-        done()
+    it('stub', function () {
+        // can't test this well without a QMD server
     })
 })
 
-describe('check_qmd_response', function () {
+describe('decode_qmd_response', function () {
     beforeEach(_set_up)
 
     it('11', function () {
-        const r = this.plugin.check_qmd_response(this.connection, '11');
+        const r = this.plugin.decode_qmd_response(this.connection, '11');
         assert.equal(DENYSOFT, r[0]);
     })
     it('12', function () {
-        const r = this.plugin.check_qmd_response(this.connection, '12');
+        const r = this.plugin.decode_qmd_response(this.connection, '12');
         assert.equal(OK, r[0]);
     })
     it('13', function () {
-        const r = this.plugin.check_qmd_response(this.connection, '13');
+        const r = this.plugin.decode_qmd_response(this.connection, '13');
         assert.equal(OK, r[0]);
     })
     it('14', function () {
         this.connection.transaction = {
             mail_from: new Address.Address('<matt@example.com>'),
         };
-        let r = this.plugin.check_qmd_response(this.connection, '14');
+        let r = this.plugin.decode_qmd_response(this.connection, '14');
         assert.equal(OK, r[0]);
 
         this.connection.transaction.mail_from = new Address.Address('<>');
-        r = this.plugin.check_qmd_response(this.connection, '14');
+        r = this.plugin.decode_qmd_response(this.connection, '14');
         assert.equal(DENY, r[0]);
     })
     it('21', function () {
-        const r = this.plugin.check_qmd_response(this.connection, '21');
+        const r = this.plugin.decode_qmd_response(this.connection, '21');
         assert.equal(DENYSOFT, r[0]);
     })
     it('22', function () {
-        const r = this.plugin.check_qmd_response(this.connection, '22');
+        const r = this.plugin.decode_qmd_response(this.connection, '22');
         assert.equal(DENYSOFT, r[0]);
     })
     it('2f', function () {
-        const r = this.plugin.check_qmd_response(this.connection, '2f');
+        const r = this.plugin.decode_qmd_response(this.connection, '2f');
         assert.equal(DENYSOFT, r[0]);
     })
     it('f1', function () {
-        const r = this.plugin.check_qmd_response(this.connection, 'f1');
+        const r = this.plugin.decode_qmd_response(this.connection, 'f1');
         assert.equal(OK, r[0]);
     })
     it('f2', function () {
-        const r = this.plugin.check_qmd_response(this.connection, 'f2');
+        const r = this.plugin.decode_qmd_response(this.connection, 'f2');
         assert.equal(OK, r[0]);
     })
     it('f3', function () {
-        const r = this.plugin.check_qmd_response(this.connection, 'f3');
+        const r = this.plugin.decode_qmd_response(this.connection, 'f3');
         assert.equal(OK, r[0]);
     })
     it('f4', function () {
-        const r = this.plugin.check_qmd_response(this.connection, 'f4');
+        const r = this.plugin.decode_qmd_response(this.connection, 'f4');
         assert.equal(OK, r[0]);
     })
     it('f5', function () {
-        const r = this.plugin.check_qmd_response(this.connection, 'f5');
+        const r = this.plugin.decode_qmd_response(this.connection, 'f5');
         assert.equal(OK, r[0]);
     })
     it('f6', function () {
-        const r = this.plugin.check_qmd_response(this.connection, 'f6');
+        const r = this.plugin.decode_qmd_response(this.connection, 'f6');
         assert.equal(OK, r[0]);
     })
     it('fe', function () {
-        const r = this.plugin.check_qmd_response(this.connection, 'fe');
+        const r = this.plugin.decode_qmd_response(this.connection, 'fe');
         assert.equal(DENYSOFT, r[0]);
     })
     it('ff', function () {
-        const r = this.plugin.check_qmd_response(this.connection, 'ff');
+        const r = this.plugin.decode_qmd_response(this.connection, 'ff');
         assert.equal(DENY, r[0]);
     })
     it('0', function () {
-        const r = this.plugin.check_qmd_response(this.connection, '0');
+        const r = this.plugin.decode_qmd_response(this.connection, '0');
         assert.equal(DENY, r[0]);
         assert.equal('not deliverable', r[1]);
     })
     it('blah', function () {
-        const r = this.plugin.check_qmd_response(this.connection, 'blah');
+        const r = this.plugin.decode_qmd_response(this.connection, 'blah');
         assert.equal(undefined, r[0]);
+    })
+})
+
+describe('hook_get_mx', function () {
+    beforeEach(_set_up_cfg)
+
+    it('returns nothing unless queue.wants=lmtp', function (done) {
+        const hmail = new fixtures.transaction.createTransaction()
+        hmail.todo = { notes: hmail.notes }
+
+        this.plugin.hook_get_mx((code, msg) => {
+            assert.equal(code, undefined)
+            assert.equal(msg, undefined)
+            done()
+        }, hmail, 'example.com')
+    })
+
+    it('returns MX when queue.wants=lmtp', function (done) {
+        const hmail = new fixtures.transaction.createTransaction()
+        hmail.todo = { notes: hmail.notes }
+        hmail.todo.notes.set('queue.wants', 'lmtp')
+
+        this.plugin.hook_get_mx((code, mx) => {
+            assert.equal(code, OK)
+            assert.deepEqual(mx, {
+                exchange: '127.0.0.1',
+                port: 24,
+                priority: 0,
+                using_lmtp: true
+            })
+            done()
+        }, hmail, 'example.com')
+    })
+
+    it('MX steered by queue.next_hop', function (done) {
+        const hmail = new fixtures.transaction.createTransaction()
+        hmail.todo = { notes: hmail.notes }
+        hmail.todo.notes.set('queue.wants', 'lmtp')
+        hmail.todo.notes.set('queue.next_hop', 'lmtp://127.1.1.1:23')
+
+        this.plugin.hook_get_mx((code, mx) => {
+            assert.equal(code, OK)
+            assert.deepEqual(mx, {
+                exchange: '127.1.1.1',
+                port: 23,
+                priority: 0,
+                using_lmtp: true
+            })
+            done()
+        }, hmail, 'example.com')
     })
 })

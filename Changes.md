@@ -1,6 +1,18 @@
 ### Unreleased
 
 
+### [1.2.0] - 2023-06-12
+
+- previously, would set next_hop=lmtp w/o setting q.wants=lmtp
+- feat: also route via LMTP for local recipients when relaying
+- cfg: rename check_outbound -> check_mail_from
+- cfg: declare check_mail_from as boolean
+- doc: added queue.wants & next_hop
+- chore: much refactoring to simplify do_qmd_response
+- chore: replace url.parse with new url.URL()
+- chore: added many tests
+
+
 ### [1.1.1] - 2022-11-29
 
 - ci: only publish when package.json has changes
@@ -52,3 +64,4 @@
 
 [1.1.0]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/1.1.0
 [1.1.1]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/1.1.1
+[1.2.0]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/1.2.0
