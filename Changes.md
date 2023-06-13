@@ -4,10 +4,13 @@
 ### [1.2.0] - 2023-06-12
 
 - previously, would set next_hop=lmtp w/o setting q.wants=lmtp
-- refactored, added many tests
-- rename check_outbound -> check_mail_from
+- feat: also route via LMTP for local recipients when relaying
+- cfg: rename check_outbound -> check_mail_from
+- cfg: declare check_mail_from as boolean
 - doc: added queue.wants & next_hop
+- chore: much refactoring to simplify do_qmd_response
 - chore: replace url.parse with new url.URL()
+- chore: added many tests
 
 
 ### [1.1.1] - 2022-11-29

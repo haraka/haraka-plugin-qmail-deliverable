@@ -67,7 +67,7 @@ describe('do_qmd_response', function () {
         this.plugin.cfg = {
             main: { host: '1.2.3.4' },
         }
-        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection.transaction, rcpt, (code, msg) => {
+        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
             assert.equal(this.connection.transaction.notes.get('queue.wants'), undefined);
             assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'smtp://1.2.3.4');
             done()
@@ -78,7 +78,7 @@ describe('do_qmd_response', function () {
         this.plugin.cfg = {
             main: { host: '1.2.3.4' },
         }
-        this.plugin.do_qmd_response([OK, 'vpopmail alias'], this.connection.transaction, rcpt, (code, msg) => {
+        this.plugin.do_qmd_response([OK, 'vpopmail alias'], this.connection, rcpt, (code, msg) => {
             assert.equal(this.connection.transaction.notes.get('queue.wants'), undefined);
             assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'smtp://1.2.3.4');
             done()
@@ -87,7 +87,7 @@ describe('do_qmd_response', function () {
 
     it('example.com: queue=undefined, dir', function (done) {
         this.plugin.cfg['example.com'] = { host: '1.2.3.4' }
-        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection.transaction, rcpt, (code, msg) => {
+        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
             assert.equal(this.connection.transaction.notes.get('queue.wants'), undefined);
             assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'smtp://1.2.3.4');
             done()
@@ -96,7 +96,7 @@ describe('do_qmd_response', function () {
 
     it('example.com: queue=undefined, forward', function (done) {
         this.plugin.cfg['example.com'] = { host: '1.2.3.4' }
-        this.plugin.do_qmd_response([OK, 'vpopmail forward'], this.connection.transaction, rcpt, (code, msg) => {
+        this.plugin.do_qmd_response([OK, 'vpopmail forward'], this.connection, rcpt, (code, msg) => {
             assert.equal(this.connection.transaction.notes.get('queue.wants'), undefined);
             assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'smtp://1.2.3.4');
             done()
@@ -105,7 +105,7 @@ describe('do_qmd_response', function () {
 
     it('example.com: queue=smtp_forward', function (done) {
         this.plugin.cfg['example.com'] = { host: '1.2.3.4', queue: 'smtp_forward' }
-        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection.transaction, rcpt, (code, msg) => {
+        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
             assert.equal(this.connection.transaction.notes.get('queue.wants'), 'smtp_forward');
             assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'smtp://1.2.3.4');
             done()
@@ -115,7 +115,7 @@ describe('do_qmd_response', function () {
     it('example.com: next_hop=lmtp sets LMTP', function (done) {
         this.plugin.cfg.main.queue = 'smtp_forward'
         this.plugin.cfg['example.com'] = { host: '1.2.3.4', next_hop: 'lmtp://5.6.7.8' }
-        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection.transaction, rcpt, (code, msg) => {
+        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
             assert.equal(this.connection.transaction.notes.get('queue.wants'), 'lmtp');
             assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'lmtp://5.6.7.8');
             done()
@@ -125,7 +125,7 @@ describe('do_qmd_response', function () {
     it('example.com: next_hop=lmtp + alias = smtp_forward', function (done) {
         this.plugin.cfg.main.queue = 'smtp_forward'
         this.plugin.cfg['example.com'] = { host: '1.2.3.4', next_hop: 'lmtp://5.6.7.8' }
-        this.plugin.do_qmd_response([OK, 'vpopmail alias'], this.connection.transaction, rcpt, (code, msg) => {
+        this.plugin.do_qmd_response([OK, 'vpopmail alias'], this.connection, rcpt, (code, msg) => {
             assert.equal(this.connection.transaction.notes.get('queue.wants'), 'smtp_forward');
             assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'lmtp://5.6.7.8');
             done()
@@ -134,7 +134,7 @@ describe('do_qmd_response', function () {
 
     it('example.com: queue=smtp_forward sets queue.wants & queue.next_hop', function (done) {
         this.plugin.cfg['example.com'] = { host: '1.2.3.4', queue: 'smtp_forward' }
-        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection.transaction, rcpt, (code, msg) => {
+        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
             assert.equal(this.connection.transaction.notes.get('queue.wants'), 'smtp_forward');
             assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'smtp://1.2.3.4');
             done()
@@ -143,7 +143,7 @@ describe('do_qmd_response', function () {
 
     it('example.com: queue=lmtp sets queue.wants & queue.next_hop', function (done) {
         this.plugin.cfg['example.com'] = { host: '1.2.3.5', queue: 'lmtp' }
-        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection.transaction, rcpt, (code, msg) => {
+        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
             assert.equal(this.connection.transaction.notes.get('queue.wants'), 'lmtp');
             assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'lmtp://1.2.3.5');
             done()
@@ -154,7 +154,7 @@ describe('do_qmd_response', function () {
         this.plugin.cfg['example.com'] = { host: '1.2.3.5', queue: 'lmtp' }
         this.connection.transaction.rcpt_to.push(new Address.Address('matt@other-domain.com'))
 
-        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection.transaction, rcpt, (code, msg) => {
+        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
             assert.equal(this.connection.transaction.notes.get('queue.wants'), 'lmtp');
             assert.equal(this.connection.transaction.notes.get('queue.next_hop'), 'lmtp://1.2.3.5');
             done()
@@ -165,7 +165,7 @@ describe('do_qmd_response', function () {
         this.plugin.cfg['example.com'] = { host: '1.2.3.5', queue: 'lmtp' }
         this.connection.transaction.notes.set('queue.next_hop', 'smtp://2.3.4.5')
 
-        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection.transaction, rcpt, (code, msg) => {
+        this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
             assert.equal(this.connection.transaction.notes.get('queue.wants'), 'outbound');
             assert.equal(this.connection.transaction.notes.get('queue.next_hop'), undefined);
             done()

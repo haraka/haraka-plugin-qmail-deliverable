@@ -71,35 +71,38 @@ exports.check_mail_from = function (next, connection, params) {
     })
 }
 
+function do_relaying (plugin, txn, next) {
+    // any RCPT is acceptable for txns with relaying privileges
+    txn.results.add(plugin, {pass: `relaying${txn.notes.local_sender ? ' local sender' : ''}`});
+    txn.notes.set('queue.wants', 'outbound');
+    next(OK);
+}
+
 exports.hook_rcpt = function (next, connection, params) {
     const txn = connection.transaction;
 
     const rcpt = params[0];
-
-    // a client with relaying privileges, any RCPT is acceptable.
-    if (connection.relaying) {
-        txn.results.add(this, {pass: `relaying${txn.notes.local_sender ? ' local sender' : ''}`});
-        txn.notes.set('queue.wants', 'outbound');
-        return next(OK);
-    }
 
     // Qmail::Deliverable::Client does a rfc2822 "atext" test
     // but Haraka has already validated for us by this point
     this.get_qmd_response(connection, rcpt, (err, qmd_res) => {
         if (err) {
             txn.results.add(this, { err });
+            if (connection.relaying) return do_relaying(this, txn, next)
             return next(DENYSOFT, "error validating email address");
         }
-        this.do_qmd_response(qmd_res, txn, rcpt, next)
+        this.do_qmd_response(qmd_res, connection, rcpt, next)
     })
 }
 
-exports.do_qmd_response = function (qmd_res, txn, rcpt, next) {
+exports.do_qmd_response = function (qmd_res, connection, rcpt, next) {
+    const txn = connection.transaction;
 
     const [r_code, dst_type] = qmd_res;
 
     if (r_code === undefined) {
         txn.results.add(this, {err: `rcpt.${dst_type}`});
+        if (connection.relaying) return do_relaying(this, txn, next)
         return next();
     }
 
@@ -107,6 +110,7 @@ exports.do_qmd_response = function (qmd_res, txn, rcpt, next) {
         // no need to DENY[SOFT] for invalid addresses. If no rcpt_to.* plugin
         // returns OK, then the address is not accepted.
         txn.results.add(this, {msg: `rcpt.${dst_type}`});
+        if (connection.relaying) return do_relaying(this, txn, next)
         return next(CONT, dst_type);
     }
 
