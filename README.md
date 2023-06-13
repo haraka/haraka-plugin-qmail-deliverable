@@ -19,13 +19,15 @@ altering the contents of `config/qmail-deliverable.ini`
 
 * `check_mail_from`= (Default: true)
 
-When `check_mail_from` is enabled, the MAIL FROM address is checked for deliverability. The deliverable status can be inspected by checking `transaction.notes.local_sender`.
+When `check_mail_from` is enabled, the MAIL FROM address is checked for deliverability. The deliverable status can be inspected by checking `transaction.notes.local_sender`. This information can be used later to determine mail handling.
+
+### Fine control of MX routing
 
 MX routing for individual domains can be set by defining `queue` and `next_hop`.
 
-* `queue`: a queue plugin (smtp_forward, qmail-queue), or lmtp. When `queue=lmtp`, if qmail-deliverable reports that the destination address is a mailbox (ie, not email list, forward, alias, etc.), then this plugin will configure the next_hop to be `lmtp://$host/` and will set up that route (via get_mx) so that outbound delivers the message to the mailbox via LMTP.
+* `queue`: a queue plugin (smtp_forward, qmail-queue, lmtp), or lmtp. When `queue=lmtp`, if qmail-deliverable reports that the destination address is a mailbox (ie, not email list, forward, alias, etc.), then this plugin will configure the next_hop to be `lmtp://$host/` and will set up that route (via `get_mx()`) so that outbound delivers the message to the mailbox via LMTP.
 
-* `next_hop`: a URL. Examples: `smtp://mx.example.com` and `lmtp://int.mx.example.com:24`
+* `next_hop`: a URL. Examples: `smtp://mx.example.com` and `lmtp://int.mx.example.com:24`. This plugin uses next_hop to direct messages to local mailboxes via LMTP. If the LMTP server (dovecot, in my case) is not the same host that is running qmail-deliverabled, set next_hop accordingly.
 
 
 ## Per-domain Configuration

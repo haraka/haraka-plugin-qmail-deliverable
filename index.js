@@ -270,7 +270,7 @@ exports.hook_queue = function (next, connection) {
     switch (qw) {
         case 'lmtp':
         case 'outbound':
-            this.loginfo(`routing to outbound: queue.wants=${qw}`);
+            this.logdebug(`routing to outbound: queue.wants=${qw}`);
             outbound.send_email(connection.transaction, next);
             break;
         default:
