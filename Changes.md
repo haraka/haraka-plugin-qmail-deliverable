@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### [1.2.2] - 2024-04-22
 
 - populate [files] in package.json.
+- dep: eslint-plugin-haraka -> @haraka/eslint-config
 
 ### [1.2.1] - 2023-06-12
 
