@@ -407,11 +407,14 @@ describe('is_split', function () {
   it('returns false for a single recipient', function () {
     this.plugin.cfg['example.com'] = { host: '1.2.3.5', queue: 'lmtp' }
     this.connection.transaction.rcpt_to.push(new Address('<matt@example.com>'))
-    assert.equal(this.plugin.is_split(
-      this.connection.transaction,
-      'lmtp',
-      'smtp://1.2.3.5',
-    ), false)
+    assert.equal(
+      this.plugin.is_split(
+        this.connection.transaction,
+        'lmtp',
+        'smtp://1.2.3.5',
+      ),
+      false,
+    )
   })
 
   it('returns false for two recipients with same next hop', function () {
@@ -420,11 +423,14 @@ describe('is_split', function () {
       new Address('<1@example.com>'),
       new Address('<2@example.com>'),
     )
-    assert.equal(this.plugin.is_split(
-      this.connection.transaction,
-      'lmtp',
-      'smtp://1.2.3.5',
-    ), false)
+    assert.equal(
+      this.plugin.is_split(
+        this.connection.transaction,
+        'lmtp',
+        'smtp://1.2.3.5',
+      ),
+      false,
+    )
   })
 
   it('returns true for two recipients with different queue.wants', function () {
@@ -434,11 +440,14 @@ describe('is_split', function () {
       new Address('<1@example.com>'),
       new Address('<2@test-example.com>'),
     )
-    assert.equal(this.plugin.is_split(
-      this.connection.transaction,
-      'lmtp',
-      'smtp://1.2.3.5',
-    ), true)
+    assert.equal(
+      this.plugin.is_split(
+        this.connection.transaction,
+        'lmtp',
+        'smtp://1.2.3.5',
+      ),
+      true,
+    )
   })
 
   it('returns true for two recipients with different next hops', function () {
@@ -449,13 +458,15 @@ describe('is_split', function () {
       new Address('<1@example.com>'),
       new Address('<2@test-example.com>'),
     )
-    assert.equal(this.plugin.is_split(
-      this.connection.transaction,
-      'outbound',
-      'smtp://1.2.3.6'
-    ), true)
+    assert.equal(
+      this.plugin.is_split(
+        this.connection.transaction,
+        'outbound',
+        'smtp://1.2.3.6',
+      ),
+      true,
+    )
   })
-
 })
 
 describe('hook_get_mx', function () {
@@ -519,4 +530,3 @@ describe('hook_get_mx', function () {
     )
   })
 })
-
