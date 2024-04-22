@@ -8,11 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 - populate [files] in package.json.
 - dep: eslint-plugin-haraka -> @haraka/eslint-config
+- lint: remove duplicate / stale rules from .eslintrc
 
 ### [1.2.1] - 2023-06-12
 
 - fix: use arrow fn in load_qmd_ini callback
-
 
 ### [1.2.0] - 2023-06-12
 
@@ -25,12 +25,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - chore: replace url.parse with new url.URL()
 - chore: added many tests
 
-
 ### [1.1.1] - 2022-11-29
 
 - ci: only publish when package.json has changes
 - feat: decrease a log message severity
-
 
 ## 1.1.0 - 2021-01-06
 
@@ -42,33 +40,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - lint: es6 interpolated strings
 - drop node 8 & 10 testing, add 14
 
-
 ## 1.0.6 - 2018-12-20
 
 - set txn.notes.local_recipient
-
 
 ## 1.0.5 - 2018-01-26
 
 - assure transaction still exists before trying to access txn.notes
 
-
 ## 1.0.4 - 2018-01-20
 
 - tighten up LMTP routing to only when explicitely set
-
 
 ## 1.0.3 - 2017-09-26
 
 - use correct name of mail hook
 - update loginfo to use get and avoid undef crash
 
-
 ## 1.0.2 - 2017-09-01
 
 - adds ability to route email via notes.queue.wants and queue.next_hop
 - when destination is a mailbox and next_hop is a LMTP url, routes via LMTP
-
 
 ## 1.0.1 - 2017-08-29
 
