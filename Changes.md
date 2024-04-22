@@ -1,5 +1,12 @@
+# Changelog
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/).
+
 ### Unreleased
 
+### [1.2.2] - 2024-04-22
+
+- populate [files] in package.json.
 
 ### [1.2.1] - 2023-06-12
 
@@ -66,8 +73,11 @@
 
 - initial release
 
-
+[1.0.1]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.0.1
+[1.0.2]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.0.2
 [1.1.0]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/1.1.0
 [1.1.1]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/1.1.1
-[1.2.0]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/1.2.0
-[1.2.1]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/1.2.1
+[1.2.0]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.2.0
+[1.2.1]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.2.1
+[1.2.2]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.2.2
+[1.3.0]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.3.0

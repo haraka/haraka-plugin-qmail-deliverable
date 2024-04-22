@@ -1,8 +1,9 @@
 {
   "name": "haraka-plugin-qmail-deliverable",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Haraka plugin that validates recipients against Qmail::Deliverable",
   "main": "index.js",
+  "files": ["config"],
   "scripts": {
     "lint": "npx eslint *.js test",
     "lintfix": "npx eslint --fix *.js test",
@@ -13,7 +14,7 @@
     "url": "git+https://github.com/haraka/haraka-plugin-qmail-deliverable.git"
   },
   "keywords": [
-    "haraka",
+    "haraka","haraka-plugin",
     "plugin",
     "recipients",
     "qmail-deliverable"
@@ -25,9 +26,7 @@
   },
   "homepage": "https://github.com/haraka/haraka-plugin-qmail-deliverable#readme",
   "devDependencies": {
-    "eslint": ">=8",
     "eslint-plugin-haraka": "*",
-    "haraka-test-fixtures": "*",
-    "mocha": ">=9"
+    "haraka-test-fixtures": "*"
   }
 }
