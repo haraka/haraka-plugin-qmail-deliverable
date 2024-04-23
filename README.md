@@ -10,16 +10,13 @@ On incoming messages (relaying=false), validate the RCPT TO address.
 
 ## Configuration
 
-The host and port that qmail-deliverabled is listening on can be set by
-altering the contents of `config/qmail-deliverable.ini`
+The host and port that qmail-deliverabled is listening on can be set in `config/qmail-deliverable.ini`
 
 - `host` (Default: localhost)
-
 - `port` (Default: 8998)
-
 - `check_mail_from`= (Default: true)
 
-When `check_mail_from` is enabled, the MAIL FROM address is checked for deliverability. The deliverable status can be inspected by checking `transaction.notes.local_sender`. This information can be used later to determine mail handling.
+When `check_mail_from` is enabled, the MAIL FROM address is checked for deliverability. The deliverable status can be inspected by checking `transaction.notes.local_sender`. This information can be used later to influence mail routing.
 
 ### Fine control of MX routing
 
@@ -34,11 +31,13 @@ MX routing for individual domains can be set by defining `queue` and `next_hop`.
 Domains can have their own configuration. The defaults are the same, so only the differences
 needs to be declared. Example:
 
+    ```ini
     [example.com]
     host=192.168.0.1
 
     [example2.com]
     host=192.168.0.2
+    ```
 
 <!-- leave these buried at the bottom of the document -->
 

@@ -266,7 +266,7 @@ exports.hook_queue = function (next, connection) {
     case 'lmtp':
     case 'outbound':
       this.logdebug(`routing to outbound: queue.wants=${qw}`)
-      outbound.send_email(connection.transaction, next)
+      outbound.send_trans_email(connection.transaction, next)
       break
     default:
       next() // do nothing
