@@ -1,6 +1,5 @@
 [![Build Status][ci-img]][ci-url]
 [![Code Climate][clim-img]][clim-url]
-[![NPM][npm-img]][npm-url]
 
 # haraka-plugin-qmail-deliverable
 
@@ -45,5 +44,3 @@ needs to be declared. Example:
 [ci-url]: https://github.com/haraka/haraka-plugin-qmail-deliverable/actions/workflows/ci.yml
 [clim-img]: https://codeclimate.com/github/haraka/haraka-plugin-qmail-deliverable/badges/gpa.svg
 [clim-url]: https://codeclimate.com/github/haraka/haraka-plugin-qmail-deliverable
-[npm-img]: https://nodei.co/npm/haraka-plugin-qmail-deliverable.png
-[npm-url]: https://www.npmjs.com/package/haraka-plugin-qmail-deliverable
