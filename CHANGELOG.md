@@ -6,18 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### [1.2.4] - 2025-01-26
 
-#### Added
-
 - 
-
-#### Fixed
-
-- 
-
-#### Changed
-
-- 
-
 
 ### [1.2.3] - 2024-04-22
 
