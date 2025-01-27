@@ -4,6 +4,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [1.2.4] - 2025-01-26
+
+#### Added
+
+- 
+
+#### Fixed
+
+- 
+
+#### Changed
+
+- 
+
+
 ### [1.2.3] - 2024-04-22
 
 - fix: use outbound.send_trans_email (was o.send_email)
@@ -80,3 +95,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [1.2.2]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.2.2
 [1.3.0]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.3.0
 [1.2.3]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.2.3
+[1.2.4]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.2.4

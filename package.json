@@ -1,6 +1,6 @@
 {
   "name": "haraka-plugin-qmail-deliverable",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Haraka plugin that validates recipients against Qmail::Deliverable",
   "main": "index.js",
   "files": [
@@ -12,7 +12,7 @@
     "lint:fix": "npx eslint@^8 *.js test --fix",
     "prettier": "npx prettier . --check",
     "prettier:fix": "npx prettier . --write --log-level=warn",
-    "test": "npx mocha@10",
+    "test": "npx mocha@11",
     "versions": "npx dependency-version-checker check",
     "versions:fix": "npx dependency-version-checker update && npm run prettier:fix"
   },
