@@ -4,6 +4,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [1.2.5] - 2025-02-06
+
+- fix: check txn still exists after callback
+
 ### [1.2.4] - 2025-01-26
 
 - move prettier config into package.json
@@ -86,3 +90,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [1.3.0]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.3.0
 [1.2.3]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.2.3
 [1.2.4]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.2.4
+[1.2.5]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.2.5
