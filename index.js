@@ -88,6 +88,7 @@ exports.hook_rcpt = function (next, connection, params) {
   // Qmail::Deliverable::Client does a rfc2822 "atext" test
   // but Haraka has already validated for us
   this.get_qmd_response(connection, rcpt, (err, qmd_res) => {
+    if (!txn) return
     if (err) {
       if (connection.relaying) return do_relaying(this, txn, next)
       txn.results.add(this, { err })
