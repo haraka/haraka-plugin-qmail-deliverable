@@ -1,4 +1,4 @@
-const assert = require('assert')
+const assert = require('node:assert')
 
 const Address = require('address-rfc2821').Address
 const fixtures = require('haraka-test-fixtures')
@@ -470,61 +470,67 @@ describe('is_split', function () {
 describe('hook_get_mx', function () {
   beforeEach(_set_up_cfg)
 
-  it('returns nothing unless queue.wants=lmtp', function (done) {
+  it('returns nothing unless queue.wants=lmtp', async function () {
     const hmail = new fixtures.transaction.createTransaction(null, smtp_ini)
     hmail.todo = { notes: hmail.notes }
 
-    this.plugin.hook_get_mx(
-      (code, msg) => {
-        assert.equal(code, undefined)
-        assert.equal(msg, undefined)
-        done()
-      },
-      hmail,
-      'example.com',
-    )
+    await new Promise((resolve) => {
+      this.plugin.hook_get_mx(
+        (code, msg) => {
+          assert.equal(code, undefined)
+          assert.equal(msg, undefined)
+          resolve()
+        },
+        hmail,
+        'example.com',
+      )
+    })
   })
 
-  it('returns MX when queue.wants=lmtp', function (done) {
+  it('returns MX when queue.wants=lmtp', async function () {
     const hmail = new fixtures.transaction.createTransaction(null, smtp_ini)
     hmail.todo = { notes: hmail.notes }
     hmail.todo.notes.set('queue.wants', 'lmtp')
 
-    this.plugin.hook_get_mx(
-      (code, mx) => {
-        assert.equal(code, OK)
-        assert.deepEqual(mx, {
-          exchange: '127.0.0.1',
-          port: 24,
-          priority: 0,
-          using_lmtp: true,
-        })
-        done()
-      },
-      hmail,
-      'example.com',
-    )
+    await new Promise((resolve) => {
+      this.plugin.hook_get_mx(
+        (code, mx) => {
+          assert.equal(code, OK)
+          assert.deepEqual(mx, {
+            exchange: '127.0.0.1',
+            port: 24,
+            priority: 0,
+            using_lmtp: true,
+          })
+          resolve()
+        },
+        hmail,
+        'example.com',
+      )
+    })
   })
 
-  it('MX steered by queue.next_hop', function (done) {
+  it('MX steered by queue.next_hop', async function () {
     const hmail = new fixtures.transaction.createTransaction(null, smtp_ini)
     hmail.todo = { notes: hmail.notes }
     hmail.todo.notes.set('queue.wants', 'lmtp')
     hmail.todo.notes.set('queue.next_hop', 'lmtp://127.1.1.1:23')
 
-    this.plugin.hook_get_mx(
-      (code, mx) => {
-        assert.equal(code, OK)
-        assert.deepEqual(mx, {
-          exchange: '127.1.1.1',
-          port: 23,
-          priority: 0,
-          using_lmtp: true,
-        })
-        done()
-      },
-      hmail,
-      'example.com',
-    )
+    await new Promise((resolve) => {
+      this.plugin.hook_get_mx(
+        (code, mx) => {
+          assert.equal(code, OK)
+          assert.deepEqual(mx, {
+            exchange: '127.1.1.1',
+            port: 23,
+            priority: 0,
+            using_lmtp: true,
+          })
+          resolve()
+        },
+        hmail,
+        'example.com',
+      )
+    })
   })
 })
