@@ -4,6 +4,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [1.3.0] - 2026-03-17
+
+- fix(hook_get_mx): use modern URL auth fields
+- chore: more transaction guarding
+- chore: refactor get_qmd_response as async
+  - use fetch instead of node:http
+  - add test coverage
+- test: remove done callbacks in async tests (#22)
+- test: convert callback-style tests to async/await
+- test: switch test runner: mocha -> node --test
+- test: added more tests
+
 ### [1.2.5] - 2025-02-06
 
 - fix: check txn still exists after callback
@@ -91,3 +103,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [1.2.3]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.2.3
 [1.2.4]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.2.4
 [1.2.5]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.2.5
+[1.3.0]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.3.0
