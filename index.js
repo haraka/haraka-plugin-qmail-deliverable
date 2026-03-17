@@ -1,8 +1,7 @@
 // validate an email address is local, using qmail-deliverabled
 
-const http = require('http')
-const querystring = require('querystring')
-const url = require('url')
+const querystring = require('node:querystring')
+const url = require('node:url')
 
 let outbound
 
@@ -12,6 +11,8 @@ exports.register = function () {
   if (process.env.HARAKA) {
     // permit testing outside of Haraka
     outbound = this.haraka_require('outbound')
+  } else {
+    outbound = undefined
   }
 
   if (this.cfg.main.check_mail_from) {
@@ -31,7 +32,7 @@ exports.load_qmd_ini = function () {
   )
 }
 
-exports.check_mail_from = function (next, connection, params) {
+exports.check_mail_from = async function (next, connection, params) {
   if (!this.cfg.main.check_mail_from) return next()
 
   // determine if MAIL FROM domain is local
@@ -46,33 +47,38 @@ exports.check_mail_from = function (next, connection, params) {
 
   const domain = params[0].host.toLowerCase()
 
-  this.get_qmd_response(connection, params[0], (err, qmd_r) => {
-    if (err) {
-      txn.results.add(this, { err })
-      return next(DENYSOFT, err)
-    }
+  try {
+    const qmd_r = await this.get_qmd_response(connection, params[0])
+    const results = connection.transaction ? connection.transaction.results : connection.results
 
     // the MAIL FROM sender is verified as a local address
     if (qmd_r[0] === OK) {
-      txn.results.add(this, { pass: `mail_from.${qmd_r[1]}` })
-      txn.notes.local_sender = domain
+      results.add(this, { pass: `mail_from.${qmd_r[1]}` })
+      if (txn) txn.notes.local_sender = domain
       return next()
     }
 
     if (qmd_r[0] === undefined) {
-      txn.results.add(this, { err: `mail_from.${qmd_r[1]}` })
+      results.add(this, { err: `mail_from.${qmd_r[1]}` })
       return next()
     }
 
-    txn.results.add(this, { msg: `mail_from.${qmd_r[1]}` })
+    results.add(this, { msg: `mail_from.${qmd_r[1]}` })
     next(CONT, `mail_from.${qmd_r[1]}`)
-  })
+  } catch (err) {
+    const results = connection.transaction ? connection.transaction.results : connection.results
+    results.add(this, { err })
+    next(DENYSOFT, err)
+  }
 }
 
-function do_relaying(plugin, txn, next) {
+function do_relaying(plugin, connection, next) {
+  if (!connection.transaction) return next()
+
   // any RCPT is acceptable for txns with relaying privileges
   // this is called in several places where errors or non-local rcpt would
   // otherwise not be allowed
+  const txn = connection.transaction
   txn.results.add(plugin, {
     pass: `relaying${txn.notes.local_sender ? ' local sender' : ''}`,
   })
@@ -80,37 +86,34 @@ function do_relaying(plugin, txn, next) {
   next(OK)
 }
 
-exports.hook_rcpt = function (next, connection, params) {
-  const txn = connection.transaction
-
+exports.hook_rcpt = async function (next, connection, params) {
   const rcpt = params[0]
 
-  // Qmail::Deliverable::Client does a rfc2822 "atext" test
-  // but Haraka has already validated for us
-  this.get_qmd_response(connection, rcpt, (err, qmd_res) => {
-    if (!txn) return
-    if (err) {
-      if (connection.relaying) return do_relaying(this, txn, next)
-      txn.results.add(this, { err })
-      return next(DENYSOFT, 'error validating email address')
-    }
+  try {
+    const qmd_res = await this.get_qmd_response(connection, rcpt)
     this.do_qmd_response(qmd_res, connection, rcpt, next)
-  })
+  } catch (err) {
+    if (connection.relaying) return do_relaying(this, connection, next)
+    const results = connection.transaction ? connection.transaction.results : connection.results
+    results.add(this, { err })
+    next(DENYSOFT, 'error validating email address')
+  }
 }
 
 exports.do_qmd_response = function (qmd_res, connection, rcpt, next) {
   const txn = connection.transaction
+  if (!txn) return next()
 
   const [r_code, dst_type] = qmd_res
 
   if (r_code === undefined) {
-    if (connection.relaying) return do_relaying(this, txn, next)
+    if (connection.relaying) return do_relaying(this, connection, next)
     txn.results.add(this, { err: `rcpt.${dst_type}` })
     return next()
   }
 
   if (r_code !== OK) {
-    if (connection.relaying) return do_relaying(this, txn, next)
+    if (connection.relaying) return do_relaying(this, connection, next)
     // no need to DENY[SOFT] for invalid addresses. If no rcpt_to.* plugin
     // returns OK, then the address is not accepted.
     txn.results.add(this, { msg: `rcpt.${dst_type}` })
@@ -133,7 +136,7 @@ exports.do_qmd_response = function (qmd_res, connection, rcpt, next) {
 
   if (this.is_split(txn, queue, next_hop)) {
     if (dom_cfg?.split === 'defer') {
-      if (connection.relaying) return do_relaying(this, txn, next)
+      if (connection.relaying) return do_relaying(this, connection, next)
       return next(DENYSOFT, 'Split transaction, retry soon')
     }
     txn.results.add(this, { msg: `split queue.wants=outbound`, emit: true })
@@ -184,35 +187,32 @@ exports.get_port = function (domain) {
   return this.cfg[domain]?.port || this.cfg.main.port || 8998
 }
 
-exports.get_qmd_response = function (connection, addr, cb) {
-  const plugin = this
-
+exports.get_qmd_response = async function (connection, addr) {
   const domain = addr.host.toLowerCase()
   const email = addr.address()
 
-  const options = {
-    method: 'get',
-    host: plugin.get_host(domain),
-    port: plugin.get_port(domain),
-  }
+  const fetch_url = `http://${this.get_host(domain)}:${this.get_port(domain)}/qd1/deliverable?${querystring.escape(email)}`
+  const options = { method: 'GET' }
 
-  connection.logdebug(plugin, `checking ${email}`)
-  options.path = `/qd1/deliverable?${querystring.escape(email)}`
-  // connection.logdebug(plugin, 'PATH: ' + options.path);
-  http
-    .get(options, function (res) {
-      connection.logprotocol(plugin, `STATUS: ${res.statusCode}`)
-      connection.logprotocol(plugin, `HEADERS: ${JSON.stringify(res.headers)}`)
-      res.setEncoding('utf8')
-      res.on('data', function (chunk) {
-        connection.logprotocol(plugin, `BODY: ${chunk}`)
-        const hexnum = new Number(chunk).toString(16)
-        const arr = plugin.decode_qmd_response(connection, hexnum)
-        connection.logdebug(plugin, arr[1])
-        cb(undefined, arr)
-      })
-    })
-    .on('error', cb)
+  connection.logdebug(this, `checking ${email}`)
+
+  const fetch_impl = this.fetch || globalThis.fetch
+  if (!fetch_impl) throw new Error('fetch is unavailable')
+
+  const response = await fetch_impl(fetch_url, options)
+  const headers = response.headers?.entries
+    ? Object.fromEntries(response.headers.entries())
+    : response.headers
+  connection.logprotocol(this, `STATUS: ${response.status}`)
+  connection.logprotocol(this, `HEADERS: ${JSON.stringify(headers)}`)
+
+  const body = await response.text()
+  connection.logprotocol(this, `BODY: ${body}`)
+
+  const hexnum = Number(body.trim()).toString(16)
+  const arr = this.decode_qmd_response(connection, hexnum)
+  connection.logdebug(this, arr[1])
+  return arr
 }
 
 exports.decode_qmd_response = function (connection, hexnum) {
@@ -266,6 +266,11 @@ exports.hook_queue = function (next, connection) {
   switch (qw) {
     case 'lmtp':
     case 'outbound':
+      if (!outbound?.send_trans_email) {
+        this.logerror('outbound is unavailable')
+        return next(DENYSOFT, 'outbound is unavailable')
+      }
+
       this.logdebug(`routing to outbound: queue.wants=${qw}`)
       outbound.send_trans_email(connection.transaction, next)
       break
@@ -289,10 +294,10 @@ exports.hook_get_mx = function (next, hmail, domain) {
     const dest = new url.URL(nh)
     if (dest.hostname) mx.exchange = dest.hostname
     if (dest.port) mx.port = dest.port
-    if (dest.auth) {
+    if (dest.username || dest.password) {
       mx.auth_type = 'plain'
-      mx.auth_user = dest.auth.split(':')[0]
-      mx.auth_pass = dest.auth.split(':')[1]
+      mx.auth_user = decodeURIComponent(dest.username)
+      mx.auth_pass = decodeURIComponent(dest.password)
     }
   }
 
