@@ -4,6 +4,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [1.3.1] - 2026-03-19
+
+- 
+
 ### [1.3.0] - 2026-03-17
 
 - fix(hook_get_mx): use modern URL auth fields
@@ -104,3 +108,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [1.2.4]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.2.4
 [1.2.5]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.2.5
 [1.3.0]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.3.0
+[1.3.1]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.3.1
