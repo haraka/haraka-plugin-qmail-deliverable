@@ -390,7 +390,6 @@ describe('check_mail_from', function () {
   })
 
   it('returns DENYSOFT on qmd lookup errors', async function () {
-    // get_qmd_response no longer throws; simulate an error by returning undefined
     this.plugin.get_qmd_response = async () => undefined
 
     let nextCode
