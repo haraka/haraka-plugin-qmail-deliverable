@@ -1,6 +1,5 @@
 // validate an email address is local, using qmail-deliverabled
 
-const querystring = require('node:querystring')
 const url = require('node:url')
 
 let outbound
@@ -191,7 +190,7 @@ exports.get_qmd_response = async function (connection, addr) {
   const domain = addr.host.toLowerCase()
   const email = addr.address()
 
-  const fetch_url = `http://${this.get_host(domain)}:${this.get_port(domain)}/qd1/deliverable?${querystring.escape(email)}`
+  const fetch_url = `http://${this.get_host(domain)}:${this.get_port(domain)}/qd1/deliverable?${encodeURIComponent(email)}`
   const options = { method: 'GET' }
 
   connection.logdebug(this, `checking ${email}`)

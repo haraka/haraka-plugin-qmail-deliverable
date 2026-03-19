@@ -13,6 +13,7 @@
     "prettier": "npx prettier . --check",
     "prettier:fix": "npx prettier . --write --log-level=warn",
     "test": "node --test",
+    "test:only": "node --test --test-only",
     "test:coverage": "HARAKA_COVERAGE=1 npx c8 --reporter=html --reporter=text --reporter=text-summary npm test",
     "versions": "npx dependency-version-checker check",
     "versions:fix": "npx dependency-version-checker update && npm run prettier:fix"
@@ -35,9 +36,9 @@
   },
   "homepage": "https://github.com/haraka/haraka-plugin-qmail-deliverable#readme",
   "devDependencies": {
-    "@haraka/eslint-config": "^2.0.2",
-    "address-rfc2821": "^2.1.3",
-    "haraka-test-fixtures": "^1.3.9"
+    "@haraka/eslint-config": "^2.0.4",
+    "address-rfc2821": "^2.1.5",
+    "haraka-test-fixtures": "^1.4.0"
   },
   "prettier": {
     "printWidth": 100,
