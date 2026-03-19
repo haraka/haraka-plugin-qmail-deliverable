@@ -30,7 +30,10 @@ describe('get_qmd_response resilient failures', function () {
       throw e
     }
 
-    const res = await this.plugin.get_qmd_response(this.connection, new Address('<user@example.com>'))
+    const res = await this.plugin.get_qmd_response(
+      this.connection,
+      new Address('<user@example.com>'),
+    )
     assert.equal(res, undefined)
   })
 
@@ -38,11 +41,18 @@ describe('get_qmd_response resilient failures', function () {
     this.plugin.fetch = async () => ({
       ok: false,
       status: 500,
-      headers: { entries() { return [['content-type', 'text/plain']] } },
+      headers: {
+        entries() {
+          return [['content-type', 'text/plain']]
+        },
+      },
       text: async () => '500',
     })
 
-    const res = await this.plugin.get_qmd_response(this.connection, new Address('<user@example.com>'))
+    const res = await this.plugin.get_qmd_response(
+      this.connection,
+      new Address('<user@example.com>'),
+    )
     assert.equal(res, undefined)
   })
 
@@ -50,11 +60,18 @@ describe('get_qmd_response resilient failures', function () {
     this.plugin.fetch = async () => ({
       ok: true,
       status: 200,
-      headers: { entries() { return [['content-type', 'text/plain']] } },
+      headers: {
+        entries() {
+          return [['content-type', 'text/plain']]
+        },
+      },
       text: async () => 'not-a-number',
     })
 
-    const res = await this.plugin.get_qmd_response(this.connection, new Address('<user@example.com>'))
+    const res = await this.plugin.get_qmd_response(
+      this.connection,
+      new Address('<user@example.com>'),
+    )
     assert.equal(res, undefined)
   })
 })

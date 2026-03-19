@@ -197,7 +197,7 @@ exports.get_qmd_response = async function (connection, addr) {
   const fetch_impl = this.fetch || globalThis.fetch
   if (!fetch_impl) throw new Error('fetch is unavailable')
 
-  const fetchTimeout = (this.cfg?.main?.fetch_timeout_ms) || 5000
+  const fetchTimeout = this.cfg?.main?.fetch_timeout_ms || 5000
   const controller = new AbortController()
   const signal = controller.signal
   const timer = setTimeout(() => controller.abort(), fetchTimeout)
@@ -208,7 +208,10 @@ exports.get_qmd_response = async function (connection, addr) {
   } catch (err) {
     clearTimeout(timer)
     if (err.name === 'AbortError') {
-      connection.logerror(this, `qmail-deliverabled request timed out after ${fetchTimeout}ms for ${email}`)
+      connection.logerror(
+        this,
+        `qmail-deliverabled request timed out after ${fetchTimeout}ms for ${email}`,
+      )
       return
     }
     connection.logerror(this, `error fetching qmail-deliverabled for ${email}: ${err}`)

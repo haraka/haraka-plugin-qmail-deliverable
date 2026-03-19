@@ -340,7 +340,10 @@ describe('get_qmd_response', function () {
       throw new Error('connect failed')
     }
 
-    const res = await this.plugin.get_qmd_response(this.connection, new Address('<user@example.com>'))
+    const res = await this.plugin.get_qmd_response(
+      this.connection,
+      new Address('<user@example.com>'),
+    )
     assert.equal(res, undefined)
   })
 })
