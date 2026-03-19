@@ -67,7 +67,7 @@ exports.check_mail_from = async function (next, connection, params) {
   } catch (err) {
     const results = connection.transaction ? connection.transaction.results : connection.results
     results.add(this, { err })
-    next(DENYSOFT, err)
+    next(DENYSOFT, err?.message ? err.message : String(err))
   }
 }
 
@@ -194,21 +194,50 @@ exports.get_qmd_response = async function (connection, addr) {
   const options = { method: 'GET' }
 
   connection.logdebug(this, `checking ${email}`)
-
   const fetch_impl = this.fetch || globalThis.fetch
   if (!fetch_impl) throw new Error('fetch is unavailable')
 
-  const response = await fetch_impl(fetch_url, options)
+  const fetchTimeout = (this.cfg?.main?.fetch_timeout_ms) || 5000
+  const controller = new AbortController()
+  const signal = controller.signal
+  const timer = setTimeout(() => controller.abort(), fetchTimeout)
+
+  let response
+  try {
+    response = await fetch_impl(fetch_url, { ...options, signal })
+  } catch (err) {
+    clearTimeout(timer)
+    if (err.name === 'AbortError') {
+      connection.logerror(this, `qmail-deliverabled request timed out after ${fetchTimeout}ms for ${email}`)
+      return
+    }
+    connection.logerror(this, `error fetching qmail-deliverabled for ${email}: ${err}`)
+    return
+  }
+  clearTimeout(timer)
+
   const headers = response.headers?.entries
     ? Object.fromEntries(response.headers.entries())
     : response.headers
   connection.logprotocol(this, `STATUS: ${response.status}`)
   connection.logprotocol(this, `HEADERS: ${JSON.stringify(headers)}`)
 
+  if (!response.ok) {
+    connection.logerror(this, `qmail-deliverabled returned HTTP ${response.status} for ${email}`)
+    return
+  }
+
   const body = await response.text()
   connection.logprotocol(this, `BODY: ${body}`)
 
-  const hexnum = Number(body.trim()).toString(16)
+  // ensure body contains a number; fallback to unknown response handling
+  const num = Number(String(body || '').trim())
+  if (Number.isNaN(num)) {
+    connection.logerror(this, `qmail-deliverabled returned invalid body for ${email}: ${body}`)
+    return
+  }
+
+  const hexnum = num.toString(16)
   const arr = this.decode_qmd_response(connection, hexnum)
   connection.logdebug(this, arr[1])
   return arr

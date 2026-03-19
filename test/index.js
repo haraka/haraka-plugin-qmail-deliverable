@@ -316,6 +316,7 @@ describe('get_qmd_response', function () {
       assert.equal(options.method, 'GET')
 
       return {
+        ok: true,
         status: 200,
         headers: {
           entries() {
@@ -339,10 +340,8 @@ describe('get_qmd_response', function () {
       throw new Error('connect failed')
     }
 
-    await assert.rejects(
-      this.plugin.get_qmd_response(this.connection, new Address('<user@example.com>')),
-      /connect failed/,
-    )
+    const res = await this.plugin.get_qmd_response(this.connection, new Address('<user@example.com>'))
+    assert.equal(res, undefined)
   })
 })
 
@@ -388,9 +387,8 @@ describe('check_mail_from', function () {
   })
 
   it('returns DENYSOFT on qmd lookup errors', async function () {
-    this.plugin.get_qmd_response = async () => {
-      throw new Error('lookup failed')
-    }
+    // get_qmd_response no longer throws; simulate an error by returning undefined
+    this.plugin.get_qmd_response = async () => undefined
 
     let nextCode
     let nextMsg
@@ -404,7 +402,7 @@ describe('check_mail_from', function () {
     )
 
     assert.equal(nextCode, DENYSOFT)
-    assert.match(nextMsg.message, /lookup failed/)
+    assert.ok(nextMsg)
   })
 })
 
