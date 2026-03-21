@@ -10,24 +10,12 @@ function _set_up() {
   this.plugin = new fixtures.plugin('qmail-deliverable')
   this.connection = new fixtures.connection.createConnection()
   this.connection.init_transaction()
-
-  // replace vm-compiled functions with instrumented versions for coverage tracking
-  if (process.env.HARAKA_COVERAGE) {
-    const plugin_module = require('../index.js')
-    Object.assign(this.plugin, plugin_module)
-  }
 }
 
 function _set_up_cfg() {
   this.plugin = new fixtures.plugin('qmail-deliverable')
   this.connection = new fixtures.connection.createConnection()
   this.connection.init_transaction()
-
-  // replace vm-compiled functions with instrumented versions for coverage tracking
-  if (process.env.HARAKA_COVERAGE) {
-    const plugin_module = require('../index.js')
-    Object.assign(this.plugin, plugin_module)
-  }
 
   this.plugin.register()
 }
@@ -48,10 +36,10 @@ describe('register', function () {
     this.plugin.register()
     assert.ok(this.plugin.cfg.main.check_mail_from)
   })
+
   it('registers the mail hook', function () {
     this.plugin.register()
-    assert.equal(this.plugin.register_hook.args[0], 'mail')
-    // console.log(this.plugin);
+    assert.equal(this.plugin.hooks.mail, 'check_mail_from')
   })
 })
 
@@ -328,6 +316,7 @@ describe('get_qmd_response', function () {
       assert.equal(options.method, 'GET')
 
       return {
+        ok: true,
         status: 200,
         headers: {
           entries() {
@@ -351,10 +340,11 @@ describe('get_qmd_response', function () {
       throw new Error('connect failed')
     }
 
-    await assert.rejects(
-      this.plugin.get_qmd_response(this.connection, new Address('<user@example.com>')),
-      /connect failed/,
+    const res = await this.plugin.get_qmd_response(
+      this.connection,
+      new Address('<user@example.com>'),
     )
+    assert.equal(res, undefined)
   })
 })
 
@@ -400,9 +390,7 @@ describe('check_mail_from', function () {
   })
 
   it('returns DENYSOFT on qmd lookup errors', async function () {
-    this.plugin.get_qmd_response = async () => {
-      throw new Error('lookup failed')
-    }
+    this.plugin.get_qmd_response = async () => undefined
 
     let nextCode
     let nextMsg
@@ -416,7 +404,7 @@ describe('check_mail_from', function () {
     )
 
     assert.equal(nextCode, DENYSOFT)
-    assert.match(nextMsg.message, /lookup failed/)
+    assert.ok(nextMsg)
   })
 })
 

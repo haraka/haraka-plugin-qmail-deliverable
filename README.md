@@ -30,13 +30,27 @@ MX routing for individual domains can be set by defining `queue` and `next_hop`.
 Domains can have their own configuration. The defaults are the same, so only the differences
 needs to be declared. Example:
 
-    ```ini
-    [example.com]
-    host=192.168.0.1
+```ini
+[example.com]
+host=192.168.0.1
 
-    [example2.com]
-    host=192.168.0.2
-    ```
+[example2.com]
+host=192.168.0.2
+```
+
+You can also configure per-domain `queue` and `next_hop` settings to steer delivery. Example:
+
+```ini
+[example.com]
+# deliver to a remote LMTP server
+queue=lmtp
+next_hop=lmtp://192.168.0.10:24
+
+[example2.com]
+# send via an outbound relay
+queue=smtp_forward
+next_hop=smtp://mx-backend.example.com:25
+```
 
 <!-- leave these buried at the bottom of the document -->
 
