@@ -8,8 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 #### Changed
 
-- v1.3.2
-
+- fix(mfrom): use optional chaining on params[0]
+- fix(err): send err.message to results, not err
 
 ### [1.3.1] - 2026-03-19
 

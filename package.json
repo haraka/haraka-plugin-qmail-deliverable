@@ -38,7 +38,7 @@
   "devDependencies": {
     "@haraka/eslint-config": "^2.0.4",
     "address-rfc2821": "^2.1.5",
-    "haraka-test-fixtures": "^1.4.0"
+    "haraka-test-fixtures": "^1.4.1"
   },
   "prettier": {
     "printWidth": 100,
