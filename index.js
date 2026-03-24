@@ -37,7 +37,7 @@ exports.check_mail_from = async function (next, connection, params) {
   // determine if MAIL FROM domain is local
   const txn = connection.transaction
 
-  const email = params[0].address()
+  const email = params[0]?.address()
   if (!email) {
     // likely an IP with relaying permission
     txn.results.add(this, { skip: 'mail_from.null', emit: true })
@@ -66,7 +66,7 @@ exports.check_mail_from = async function (next, connection, params) {
     next(CONT, `mail_from.${qmd_r[1]}`)
   } catch (err) {
     const results = connection.transaction ? connection.transaction.results : connection.results
-    results.add(this, { err })
+    results.add(this, { err: err.message })
     next(DENYSOFT, err?.message ? err.message : String(err))
   }
 }
@@ -94,7 +94,7 @@ exports.hook_rcpt = async function (next, connection, params) {
   } catch (err) {
     if (connection.relaying) return do_relaying(this, connection, next)
     const results = connection.transaction ? connection.transaction.results : connection.results
-    results.add(this, { err })
+    results.add(this, { err: err.message })
     next(DENYSOFT, 'error validating email address')
   }
 }
