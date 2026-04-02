@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### [1.3.3] - 2026-04-01
 
+- fix: removed QMD timer (default: 5s). Too short IRL
+- ci: add explicit permissions
 
 ### [1.3.2] - 2026-03-24
 
