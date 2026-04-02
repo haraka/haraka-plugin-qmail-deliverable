@@ -38,3 +38,5 @@ jspm_packages
 
 package-lock.json
 haraka-update.sh
+CLAUDE.md
+GEMINI.md
