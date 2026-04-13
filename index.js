@@ -84,7 +84,6 @@ function do_relaying(plugin, connection, next) {
 }
 
 exports.hook_rcpt = async function (next, connection, params) {
-
   try {
     const rcpt = params[0]
     const qmd_res = await this.get_qmd_response(connection, rcpt)
@@ -316,6 +315,6 @@ exports.hook_get_mx = function (next, hmail, domain) {
   next(OK, mx)
 }
 
-function results (connection) {
+function results(connection) {
   return connection.transaction ? connection.transaction.results : connection.results
 }
