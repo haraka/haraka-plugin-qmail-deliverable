@@ -35,38 +35,36 @@ exports.check_mail_from = async function (next, connection, params) {
   if (!this.cfg.main.check_mail_from) return next()
 
   // determine if MAIL FROM domain is local
-  const txn = connection.transaction
 
   const email = params[0]?.address()
   if (!email) {
     // likely an IP with relaying permission
-    txn.results.add(this, { skip: 'mail_from.null', emit: true })
+    results(connection).add(this, { skip: 'mail_from.null', emit: true })
     return next()
   }
 
-  const domain = params[0].host.toLowerCase()
-
   try {
     const qmd_r = await this.get_qmd_response(connection, params[0])
-    const results = txn?.results ?? connection.results
 
     // the MAIL FROM sender is verified as a local address
     if (qmd_r[0] === OK) {
-      results.add(this, { pass: `mail_from.${qmd_r[1]}` })
-      if (txn) txn.notes.local_sender = domain
+      results(connection).add(this, { pass: `mail_from.${qmd_r[1]}` })
+      const domain = params[0]?.host?.toLowerCase()
+      if (domain && connection.transaction?.notes) {
+        connection.transaction.notes.local_sender = domain
+      }
       return next()
     }
 
     if (qmd_r[0] === undefined) {
-      results.add(this, { err: `mail_from.${qmd_r[1]}` })
+      results(connection).add(this, { err: `mail_from.${qmd_r[1]}` })
       return next()
     }
 
-    results.add(this, { msg: `mail_from.${qmd_r[1]}` })
+    results(connection).add(this, { msg: `mail_from.${qmd_r[1]}` })
     next(CONT, `mail_from.${qmd_r[1]}`)
   } catch (err) {
-    const results = txn?.results ?? connection.results
-    results.add(this, { err: err.message })
+    results(connection).add(this, { err: err.message })
     next(DENYSOFT, err?.message ? err.message : String(err))
   }
 }
@@ -78,17 +76,17 @@ function do_relaying(plugin, connection, next) {
   // this is called in several places where errors or non-local rcpt would
   // otherwise not be allowed
   const txn = connection.transaction
-  txn.results.add(plugin, {
-    pass: `relaying${txn.notes.local_sender ? ' local sender' : ''}`,
+  results(connection).add(plugin, {
+    pass: `relaying${txn?.notes?.local_sender ? ' local sender' : ''}`,
   })
-  txn.notes.set('queue.wants', 'outbound')
+  if (txn?.notes) txn.notes.set('queue.wants', 'outbound')
   next(OK)
 }
 
 exports.hook_rcpt = async function (next, connection, params) {
-  const rcpt = params[0]
 
   try {
+    const rcpt = params[0]
     const qmd_res = await this.get_qmd_response(connection, rcpt)
     this.do_qmd_response(qmd_res, connection, rcpt, next)
   } catch (err) {
@@ -107,7 +105,7 @@ exports.do_qmd_response = function (qmd_res, connection, rcpt, next) {
 
   if (r_code === undefined) {
     if (connection.relaying) return do_relaying(this, connection, next)
-    txn.results.add(this, { err: `rcpt.${dst_type}` })
+    results(connection).add(this, { err: `rcpt.${dst_type}` })
     return next()
   }
 
@@ -115,15 +113,15 @@ exports.do_qmd_response = function (qmd_res, connection, rcpt, next) {
     if (connection.relaying) return do_relaying(this, connection, next)
     // no need to DENY[SOFT] for invalid addresses. If no rcpt_to.* plugin
     // returns OK, then the address is not accepted.
-    txn.results.add(this, { msg: `rcpt.${dst_type}` })
+    results(connection).add(this, { msg: `rcpt.${dst_type}` })
     return next(CONT, dst_type)
   }
 
-  const domain = rcpt.host.toLowerCase()
+  const domain = rcpt?.host?.toLowerCase()
   const dom_cfg = this.cfg[domain] || this.cfg.main
 
-  txn.notes.local_recipient = domain
-  txn.results.add(this, { pass: `rcpt.${dst_type}` })
+  if (domain && txn?.notes) txn.notes.local_recipient = domain
+  results(connection).add(this, { pass: `rcpt.${dst_type}` })
 
   let queue = this.get_queue(domain)
   let next_hop = this.get_next_hop(domain, queue)
@@ -138,12 +136,12 @@ exports.do_qmd_response = function (qmd_res, connection, rcpt, next) {
       if (connection.relaying) return do_relaying(this, connection, next)
       return next(DENYSOFT, 'Split transaction, retry soon')
     }
-    txn.results.add(this, { msg: `split queue.wants=outbound`, emit: true })
+    results(connection).add(this, { msg: `split queue.wants=outbound`, emit: true })
     txn.notes.set('queue.wants', 'outbound')
     delete txn.notes?.queue?.next_hop
   } else {
     if (!txn.notes.get('queue.wants')) {
-      txn.results.add(this, {
+      results(connection).add(this, {
         msg: `queue.wants=${queue}, next_hop=${next_hop}`,
         emit: true,
       })
@@ -316,4 +314,8 @@ exports.hook_get_mx = function (next, hmail, domain) {
 
   this.logdebug(mx)
   next(OK, mx)
+}
+
+function results (connection) {
+  return connection.transaction ? connection.transaction.results : connection.results
 }

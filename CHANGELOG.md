@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### [1.3.4] - 2026-04-13
 
+- fix: transaction and null value guarding
 
 ### [1.3.3] - 2026-04-01
 
