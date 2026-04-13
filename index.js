@@ -236,7 +236,7 @@ exports.decode_qmd_response = function (connection, hexnum) {
     case '13':
       return [OK, 'bouncesaying with program']
     case '14': {
-      const from = connection.transaction.mail_from.address()
+      const from = connection.transaction?.mail_from?.address()
       if (!from || from === '<>') {
         return [DENY, 'mailing lists do not accept null senders']
       }
@@ -272,6 +272,7 @@ exports.decode_qmd_response = function (connection, hexnum) {
 }
 
 exports.hook_queue = function (next, connection) {
+  if (!connection.transaction) return next()
   const qw = connection.transaction.notes.get('queue.wants')
   switch (qw) {
     case 'lmtp':

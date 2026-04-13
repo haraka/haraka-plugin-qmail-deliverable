@@ -20,6 +20,19 @@ function _set_up_cfg() {
   this.plugin.register()
 }
 
+function _set_up_no_txn() {
+  this.plugin = new fixtures.plugin('qmail-deliverable')
+  this.connection = new fixtures.connection.createConnection()
+  // intentionally no init_transaction() — simulates a remote disconnect
+}
+
+function _set_up_cfg_no_txn() {
+  this.plugin = new fixtures.plugin('qmail-deliverable')
+  this.connection = new fixtures.connection.createConnection()
+  // intentionally no init_transaction() — simulates a remote disconnect
+  this.plugin.register()
+}
+
 describe('load_qmd_ini', function () {
   beforeEach(_set_up)
 
@@ -687,6 +700,28 @@ describe('hook_get_mx', function () {
   })
 })
 
+describe('hook_queue (no transaction)', function () {
+  beforeEach(function () {
+    _set_up_no_txn.call(this)
+    delete process.env.HARAKA
+    this.plugin.register()
+  })
+  afterEach(function () {
+    delete process.env.HARAKA
+  })
+
+  it('returns next() without crashing when transaction is absent', function () {
+    let nextCalled = false
+    let nextCode
+    this.plugin.hook_queue((code) => {
+      nextCalled = true
+      nextCode = code
+    }, this.connection)
+    assert.equal(nextCalled, true)
+    assert.equal(nextCode, undefined)
+  })
+})
+
 describe('hook_queue', function () {
   beforeEach(function () {
     _set_up.call(this)
@@ -742,5 +777,127 @@ describe('hook_queue', function () {
 
     assert.equal(nextCode, DENYSOFT)
     assert.equal(nextMsg, 'outbound is unavailable')
+  })
+})
+
+describe('do_qmd_response (no transaction)', function () {
+  beforeEach(_set_up_cfg_no_txn)
+  const rcpt = new Address('<user@example.com>')
+
+  it('calls next() without crashing when transaction is absent', async function () {
+    await new Promise((resolve) => {
+      this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
+        assert.equal(code, undefined)
+        assert.equal(msg, undefined)
+        resolve()
+      })
+    })
+  })
+})
+
+describe('decode_qmd_response (no transaction)', function () {
+  beforeEach(_set_up_no_txn)
+
+  it('14: returns DENY for null sender when transaction is absent', function () {
+    const r = this.plugin.decode_qmd_response(this.connection, '14')
+    assert.equal(r[0], DENY)
+    assert.equal(r[1], 'mailing lists do not accept null senders')
+  })
+})
+
+describe('check_mail_from (no transaction)', function () {
+  beforeEach(_set_up_cfg_no_txn)
+
+  it('handles missing transaction gracefully when qmd returns OK', async function () {
+    this.plugin.get_qmd_response = async () => [OK, 'normal delivery']
+
+    let nextCode
+    await this.plugin.check_mail_from(
+      (code) => {
+        nextCode = code
+      },
+      this.connection,
+      [new Address('<user@example.com>')],
+    )
+
+    assert.equal(nextCode, undefined)
+  })
+
+  it('returns DENYSOFT on qmd lookup errors without crashing', async function () {
+    this.plugin.get_qmd_response = async () => undefined
+
+    let nextCode
+    await this.plugin.check_mail_from(
+      (code) => {
+        nextCode = code
+      },
+      this.connection,
+      [new Address('<user@example.com>')],
+    )
+
+    assert.equal(nextCode, DENYSOFT)
+  })
+})
+
+describe('hook_rcpt (no transaction)', function () {
+  beforeEach(_set_up_cfg_no_txn)
+
+  it('calls next() without crashing when qmd returns OK', async function () {
+    this.plugin.get_qmd_response = async () => [OK, 'normal delivery']
+
+    let nextCode
+    await this.plugin.hook_rcpt(
+      (code) => {
+        nextCode = code
+      },
+      this.connection,
+      [new Address('<user@example.com>')],
+    )
+
+    // do_qmd_response returns next() with no args when transaction is absent
+    assert.equal(nextCode, undefined)
+  })
+
+  it('returns DENYSOFT when qmd lookup fails and not relaying', async function () {
+    this.connection.relaying = false
+    this.plugin.get_qmd_response = async () => {
+      throw new Error('connect failed')
+    }
+
+    let nextCode
+    let nextMsg
+    await this.plugin.hook_rcpt(
+      (code, msg) => {
+        nextCode = code
+        nextMsg = msg
+      },
+      this.connection,
+      [new Address('<user@example.com>')],
+    )
+
+    assert.equal(nextCode, DENYSOFT)
+    assert.equal(nextMsg, 'error validating email address')
+  })
+
+  it('calls next() without crashing when relaying and transaction is absent', async function () {
+    this.connection.relaying = true
+    this.plugin.get_qmd_response = async () => {
+      throw new Error('connect failed')
+    }
+
+    let nextCalled = false
+    let nextCode
+    await this.plugin.hook_rcpt(
+      (code) => {
+        nextCalled = true
+        nextCode = code
+      },
+      this.connection,
+      [new Address('<user@example.com>')],
+    )
+
+    // do_relaying returns next() with no args when transaction is absent
+    assert.equal(nextCalled, true)
+    assert.equal(nextCode, undefined)
   })
 })
