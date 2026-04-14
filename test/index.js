@@ -452,6 +452,78 @@ describe('check_mail_from', function () {
 
     assert.equal(nextCode, undefined)
   })
+
+  it('skips with null result when MAIL FROM has no address', async function () {
+    let called = false
+    this.plugin.get_qmd_response = async () => {
+      called = true
+    }
+
+    let nextCode
+    await this.plugin.check_mail_from(
+      (code) => {
+        nextCode = code
+      },
+      this.connection,
+      [new Address('<>')],
+    )
+
+    assert.equal(called, false)
+    assert.equal(nextCode, undefined)
+  })
+
+  it('calls next() when qmd decode returns [undefined, reason]', async function () {
+    this.plugin.get_qmd_response = async () => [undefined, 'unknown rv(ab)']
+
+    let nextCode
+    await this.plugin.check_mail_from(
+      (code) => {
+        nextCode = code
+      },
+      this.connection,
+      [new Address('<user@example.com>')],
+    )
+
+    assert.equal(nextCode, undefined)
+  })
+
+  it('calls next(CONT) when qmd returns a non-OK denial code', async function () {
+    this.plugin.get_qmd_response = async () => [DENY, 'not local']
+
+    let nextCode
+    let nextMsg
+    await this.plugin.check_mail_from(
+      (code, msg) => {
+        nextCode = code
+        nextMsg = msg
+      },
+      this.connection,
+      [new Address('<user@example.com>')],
+    )
+
+    assert.equal(nextCode, CONT)
+    assert.match(nextMsg, /not local/)
+  })
+
+  it('calls next(DENYSOFT) when get_qmd_response throws', async function () {
+    this.plugin.get_qmd_response = async () => {
+      throw new Error('unexpected failure')
+    }
+
+    let nextCode
+    let nextMsg
+    await this.plugin.check_mail_from(
+      (code, msg) => {
+        nextCode = code
+        nextMsg = msg
+      },
+      this.connection,
+      [new Address('<user@example.com>')],
+    )
+
+    assert.equal(nextCode, DENYSOFT)
+    assert.equal(nextMsg, 'unexpected failure')
+  })
 })
 
 describe('hook_rcpt', function () {
