@@ -4,6 +4,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [1.3.5] - 2026-04-14
+
+
 ### [1.3.4] - 2026-04-13
 
 - fix: transaction and null value guarding
@@ -131,3 +134,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [1.3.2]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.3.2
 [1.3.3]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.3.3
 [1.3.4]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.3.4
+[1.3.5]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.3.5
