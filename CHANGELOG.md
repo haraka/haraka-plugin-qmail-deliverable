@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### [1.3.5] - 2026-04-14
 
 - fix: solved QMD test failures
-                                                                                                                                     
+
 ### [1.3.4] - 2026-04-13
 
 - fix: transaction and null value guarding

@@ -370,7 +370,11 @@ describe('get_qmd_response', function () {
       return {
         ok: true,
         status: 200,
-        headers: { entries() { return [] } },
+        headers: {
+          entries() {
+            return []
+          },
+        },
         text: async () => '241',
       }
     }
