@@ -46,6 +46,11 @@ exports.check_mail_from = async function (next, connection, params) {
   try {
     const qmd_r = await this.get_qmd_response(connection, params[0])
 
+    if (!qmd_r) {
+      results(connection).add(this, { err: 'mail_from.qmd_unavailable' })
+      return next()
+    }
+
     // the MAIL FROM sender is verified as a local address
     if (qmd_r[0] === OK) {
       results(connection).add(this, { pass: `mail_from.${qmd_r[1]}` })
@@ -193,9 +198,15 @@ exports.get_qmd_response = async function (connection, addr) {
   const fetch_impl = this.fetch || globalThis.fetch
   if (!fetch_impl) throw new Error('fetch is unavailable')
 
+  const timeout = (this.cfg[domain]?.timeout ?? this.cfg.main.timeout ?? 27) * 1000
+
   let response
   try {
-    response = await fetch_impl(fetch_url, { method: 'GET' })
+    response = await fetch_impl(fetch_url, {
+      method: 'GET',
+      headers: { Connection: 'close' },
+      signal: AbortSignal.timeout(timeout),
+    })
   } catch (err) {
     connection.logerror(this, `error fetching qmd for ${email}: ${err}`)
     return
