@@ -4,6 +4,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+- test: add a test to avoid disconnect regression
+
 ### [1.3.5] - 2026-04-14
 
 - fix: solved QMD test failures

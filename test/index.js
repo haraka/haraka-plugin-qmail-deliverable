@@ -395,6 +395,42 @@ describe('get_qmd_response', function () {
     )
     assert.equal(res, undefined)
   })
+
+  it('recovers after QMD disconnects following the first response', async function () {
+    // Regression test: QMD closes the connection after responding (Connection: close).
+    // A subsequent fetch must not inherit any broken state — it should succeed on
+    // a fresh call and return undefined on the disconnected one.
+    let callCount = 0
+    const successResponse = () => ({
+      ok: true,
+      status: 200,
+      headers: { entries: () => [] },
+      text: async () => '241', // 0xf1 = normal delivery
+    })
+
+    this.plugin.fetch = async () => {
+      callCount++
+      if (callCount === 1) return successResponse()          // auto-verify succeeds
+      if (callCount === 2) throw new Error('ECONNRESET')    // QMD drops connection
+      return successResponse()                               // reconnect succeeds
+    }
+
+    const addr = new Address('<user@example.com>')
+
+    // 1st call — simulates the auto-verification (check_mail_from)
+    const res1 = await this.plugin.get_qmd_response(this.connection, addr)
+    assert.deepEqual(res1, [OK, 'normal delivery'])
+
+    // 2nd call — QMD closes the connection (Connection: close side-effect)
+    const res2 = await this.plugin.get_qmd_response(this.connection, addr)
+    assert.equal(res2, undefined)
+
+    // 3rd call — fresh connection; must work as if nothing happened
+    const res3 = await this.plugin.get_qmd_response(this.connection, addr)
+    assert.deepEqual(res3, [OK, 'normal delivery'])
+
+    assert.equal(callCount, 3)
+  })
 })
 
 describe('check_mail_from', function () {
