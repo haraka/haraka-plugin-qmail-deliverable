@@ -327,6 +327,7 @@ describe('get_qmd_response', function () {
     this.plugin.fetch = async (resource, options) => {
       assert.equal(resource, 'http://127.0.0.1:8998/qd1/deliverable?user%40example.com')
       assert.equal(options.method, 'GET')
+      assert.equal(options.headers?.Connection, 'close')
 
       return {
         ok: true,
@@ -351,6 +352,37 @@ describe('get_qmd_response', function () {
   it('rejects on fetch error', async function () {
     this.plugin.fetch = async () => {
       throw new Error('connect failed')
+    }
+
+    const res = await this.plugin.get_qmd_response(
+      this.connection,
+      new Address('<user@example.com>'),
+    )
+    assert.equal(res, undefined)
+  })
+
+  it('passes AbortSignal.timeout to fetch using configured timeout', async function () {
+    this.plugin.cfg = { main: { timeout: 10 } }
+
+    let capturedSignal
+    this.plugin.fetch = async (resource, options) => {
+      capturedSignal = options.signal
+      return {
+        ok: true,
+        status: 200,
+        headers: { entries() { return [] } },
+        text: async () => '241',
+      }
+    }
+
+    await this.plugin.get_qmd_response(this.connection, new Address('<user@example.com>'))
+    assert.ok(capturedSignal instanceof AbortSignal)
+  })
+
+  it('returns undefined on timeout (AbortError)', async function () {
+    this.plugin.fetch = async () => {
+      const err = new DOMException('The operation was aborted', 'AbortError')
+      throw err
     }
 
     const res = await this.plugin.get_qmd_response(
@@ -402,22 +434,19 @@ describe('check_mail_from', function () {
     assert.equal(this.connection.transaction.notes.local_sender, 'example.com')
   })
 
-  it('returns DENYSOFT on qmd lookup errors', async function () {
+  it('calls next() without DENY when qmd is unavailable (returns undefined)', async function () {
     this.plugin.get_qmd_response = async () => undefined
 
     let nextCode
-    let nextMsg
     await this.plugin.check_mail_from(
-      (code, msg) => {
+      (code) => {
         nextCode = code
-        nextMsg = msg
       },
       this.connection,
       [new Address('<user@example.com>')],
     )
 
-    assert.equal(nextCode, DENYSOFT)
-    assert.ok(nextMsg)
+    assert.equal(nextCode, undefined)
   })
 })
 
@@ -823,7 +852,7 @@ describe('check_mail_from (no transaction)', function () {
     assert.equal(nextCode, undefined)
   })
 
-  it('returns DENYSOFT on qmd lookup errors without crashing', async function () {
+  it('calls next() without DENY when qmd is unavailable', async function () {
     this.plugin.get_qmd_response = async () => undefined
 
     let nextCode
@@ -835,7 +864,7 @@ describe('check_mail_from (no transaction)', function () {
       [new Address('<user@example.com>')],
     )
 
-    assert.equal(nextCode, DENYSOFT)
+    assert.equal(nextCode, undefined)
   })
 })
 
