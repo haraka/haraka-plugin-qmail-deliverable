@@ -410,9 +410,9 @@ describe('get_qmd_response', function () {
 
     this.plugin.fetch = async () => {
       callCount++
-      if (callCount === 1) return successResponse()          // auto-verify succeeds
-      if (callCount === 2) throw new Error('ECONNRESET')    // QMD drops connection
-      return successResponse()                               // reconnect succeeds
+      if (callCount === 1) return successResponse() // auto-verify succeeds
+      if (callCount === 2) throw new Error('ECONNRESET') // QMD drops connection
+      return successResponse() // reconnect succeeds
     }
 
     const addr = new Address('<user@example.com>')
