@@ -36,7 +36,7 @@ exports.check_mail_from = async function (next, connection, params) {
 
   // determine if MAIL FROM domain is local
 
-  const email = params[0]?.address()
+  const email = params[0]?.address
   if (!email) {
     // likely an IP with relaying permission
     results(connection).add(this, { skip: 'mail_from.null', emit: true })
@@ -190,7 +190,7 @@ exports.get_port = function (domain) {
 
 exports.get_qmd_response = async function (connection, addr) {
   const domain = addr.host.toLowerCase()
-  const email = addr.address()
+  const email = addr.address
 
   const fetch_url = `http://${this.get_host(domain)}:${this.get_port(domain)}/qd1/deliverable?${encodeURIComponent(email)}`
 
@@ -247,7 +247,7 @@ exports.decode_qmd_response = function (connection, hexnum) {
     case '13':
       return [OK, 'bouncesaying with program']
     case '14': {
-      const from = connection.transaction?.mail_from?.address()
+      const from = connection.transaction?.mail_from?.address
       if (!from || from === '<>') {
         return [DENY, 'mailing lists do not accept null senders']
       }

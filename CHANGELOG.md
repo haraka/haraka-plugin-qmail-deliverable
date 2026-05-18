@@ -6,11 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### [1.4.0] - 2026-05-17
 
-#### Changed
-
-- add a test to avoid disconnect regression
-
-
+- changed: dep address-rfc2821 -> @haraka/email-address
 - test: add a test to avoid disconnect regression
 
 ### [1.3.5] - 2026-04-14

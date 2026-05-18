@@ -3,7 +3,7 @@
 const assert = require('node:assert')
 const { beforeEach, afterEach, describe, it } = require('node:test')
 
-const Address = require('address-rfc2821').Address
+const Address = require('@haraka/email-address').Address
 const fixtures = require('haraka-test-fixtures')
 
 function _set_up() {

@@ -1,7 +1,7 @@
 const assert = require('node:assert')
 const { afterEach, beforeEach, describe, it } = require('node:test')
 
-const Address = require('address-rfc2821').Address
+const Address = require('@haraka/email-address').Address
 const fixtures = require('haraka-test-fixtures')
 
 const smtp_ini = { main: {}, headers: {} }
@@ -573,7 +573,7 @@ describe('hook_rcpt', function () {
     this.plugin.do_qmd_response = (qmd_res, connection, addr, next) => {
       called = true
       assert.deepEqual(qmd_res, [OK, 'normal delivery'])
-      assert.equal(addr.address(), rcpt.address())
+      assert.equal(addr.address, rcpt.address)
       next()
     }
 
