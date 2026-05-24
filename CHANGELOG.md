@@ -4,6 +4,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [1.4.0] - 2026-05-17
+
+- changed: dep address-rfc2821 -> @haraka/email-address
+- test: add a test to avoid disconnect regression
+
 ### [1.3.5] - 2026-04-14
 
 - fix: solved QMD test failures
@@ -136,3 +141,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [1.3.3]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.3.3
 [1.3.4]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.3.4
 [1.3.5]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.3.5
+[1.4.0]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.4.0
