@@ -1,7 +1,6 @@
-[![Build Status][ci-img]][ci-url]
-[![Code Climate][clim-img]][clim-url]
-
 # haraka-plugin-qmail-deliverable
+
+[![Test][ci-img]][ci-url] [![Cover][cov-img]][cov-url] [![Qlty][qlty-img]][qlty-url]
 
 A client for checking the deliverability of an email address against the [qmail-deliverabled](http://search.cpan.org/dist/Qmail-Deliverable/) daemon.
 
@@ -15,7 +14,7 @@ The host and port that qmail-deliverabled is listening on can be set in `config/
 - `port` (Default: 8998)
 - `check_mail_from`= (Default: true)
 
-When `check_mail_from` is enabled, the MAIL FROM address is checked for deliverability. The deliverable status can be inspected by checking `transaction.notes.local_sender`. This information can be used later to influence mail routing.
+When `check_mail_from` is enabled, the MAIL FROM address is checked for deliverability. If the sender is verified as local, `transaction.notes.local_sender` is set to the sender's **domain** (e.g. `example.com`). The presence of that note (truthy) is the "deliverable" signal; the value itself is the matching domain, which lets downstream code drive per-domain routing decisions.
 
 ### Fine control of MX routing
 
@@ -56,5 +55,7 @@ next_hop=smtp://mx-backend.example.com:25
 
 [ci-img]: https://github.com/haraka/haraka-plugin-qmail-deliverable/actions/workflows/ci.yml/badge.svg
 [ci-url]: https://github.com/haraka/haraka-plugin-qmail-deliverable/actions/workflows/ci.yml
-[clim-img]: https://codeclimate.com/github/haraka/haraka-plugin-qmail-deliverable/badges/gpa.svg
-[clim-url]: https://codeclimate.com/github/haraka/haraka-plugin-qmail-deliverable
+[cov-img]: https://codecov.io/github/haraka/haraka-plugin-qmail-deliverable/coverage.svg
+[cov-url]: https://codecov.io/github/haraka/haraka-plugin-qmail-deliverable
+[qlty-img]: https://qlty.sh/gh/haraka/projects/haraka-plugin-qmail-deliverable/maintainability.svg
+[qlty-url]: https://qlty.sh/gh/haraka/projects/haraka-plugin-qmail-deliverable

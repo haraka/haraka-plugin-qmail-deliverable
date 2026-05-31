@@ -4,12 +4,11 @@ const assert = require('node:assert')
 const { beforeEach, afterEach, describe, it } = require('node:test')
 
 const { Address } = require('@haraka/email-address')
-const fixtures = require('haraka-test-fixtures')
+const { makeConnection, makePlugin } = require('haraka-test-fixtures')
 
 function _set_up() {
-  this.plugin = new fixtures.plugin('qmail-deliverable')
-  this.connection = new fixtures.connection.createConnection()
-  this.connection.init_transaction()
+  this.plugin = makePlugin('qmail-deliverable', { register: false })
+  this.connection = makeConnection({ withTxn: true })
 }
 
 describe('get_qmd_response resilient failures', function () {

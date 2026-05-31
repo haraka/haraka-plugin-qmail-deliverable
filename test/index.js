@@ -3,32 +3,31 @@ const { afterEach, beforeEach, describe, it } = require('node:test')
 
 const { Address } = require('@haraka/email-address')
 const fixtures = require('haraka-test-fixtures')
+const { makeConnection, makePlugin } = fixtures
 
 const smtp_ini = { main: {}, headers: {} }
 
 function _set_up() {
-  this.plugin = new fixtures.plugin('qmail-deliverable')
-  this.connection = new fixtures.connection.createConnection()
-  this.connection.init_transaction()
+  this.plugin = makePlugin('qmail-deliverable', { register: false })
+  this.connection = makeConnection({ withTxn: true })
 }
 
 function _set_up_cfg() {
-  this.plugin = new fixtures.plugin('qmail-deliverable')
-  this.connection = new fixtures.connection.createConnection()
-  this.connection.init_transaction()
+  this.plugin = makePlugin('qmail-deliverable', { register: false })
+  this.connection = makeConnection({ withTxn: true })
 
   this.plugin.register()
 }
 
 function _set_up_no_txn() {
-  this.plugin = new fixtures.plugin('qmail-deliverable')
-  this.connection = new fixtures.connection.createConnection()
+  this.plugin = makePlugin('qmail-deliverable', { register: false })
+  this.connection = makeConnection()
   // intentionally no init_transaction() — simulates a remote disconnect
 }
 
 function _set_up_cfg_no_txn() {
-  this.plugin = new fixtures.plugin('qmail-deliverable')
-  this.connection = new fixtures.connection.createConnection()
+  this.plugin = makePlugin('qmail-deliverable', { register: false })
+  this.connection = makeConnection()
   // intentionally no init_transaction() — simulates a remote disconnect
   this.plugin.register()
 }
