@@ -122,7 +122,6 @@ exports.do_qmd_response = function (qmd_res, connection, rcpt, next) {
   }
 
   const domain = rcpt?.host?.toLowerCase()
-  const dom_cfg = this.cfg[domain] || this.cfg.main
 
   if (domain && txn?.notes) txn.notes.local_recipient = domain
   results(connection).add(this, { pass: `rcpt.${dst_type}` })
@@ -136,7 +135,7 @@ exports.do_qmd_response = function (qmd_res, connection, rcpt, next) {
   }
 
   if (this.is_split(txn, queue, next_hop)) {
-    if (dom_cfg?.split === 'defer') {
+    if (this.get_split(domain) === 'defer') {
       if (connection.relaying) return do_relaying(this, connection, next)
       return next(DENYSOFT, 'Split transaction, retry soon')
     }
@@ -178,6 +177,10 @@ exports.get_next_hop = function (domain, queue) {
 exports.get_queue = function (domain) {
   // lmtp, outbound, smtp_forward, qmail-queue
   return this.cfg[domain]?.queue || this.cfg.main.queue
+}
+
+exports.get_split = function (domain) {
+  return this.cfg[domain]?.split || this.cfg.main.split
 }
 
 exports.get_host = function (domain) {

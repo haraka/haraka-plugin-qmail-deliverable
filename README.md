@@ -24,6 +24,8 @@ MX routing for individual domains can be set by defining `queue` and `next_hop`.
 
 - `next_hop`: a URL. Examples: `smtp://mx.example.com` and `lmtp://int.mx.example.com:24`. This plugin uses next_hop to direct messages to local mailboxes via LMTP. If the LMTP server (dovecot, in my case) is not the same host that is running qmail-deliverabled, set next_hop accordingly.
 
+- `split`: what to do when the recipients of one message have different destinations (eg, an alias delivered by smtp_forward and a mailbox delivered by LMTP). By default, the message is handed to outbound, which delivers it to the MX of each recipient domain. With `split=defer`, the recipient that would split the message is deferred, and the sender retries it in a message of its own. A domain without its own `split` uses the one in [main].
+
 ## Per-domain Configuration
 
 Domains can have their own configuration. The defaults are the same, so only the differences

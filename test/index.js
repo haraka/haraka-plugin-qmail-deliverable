@@ -309,6 +309,36 @@ describe('do_qmd_response', function () {
       })
     })
   })
+
+  it('a domain without split follows split=defer in [main]', async function () {
+    this.plugin.cfg.main.split = 'defer'
+    this.plugin.cfg['example.com'] = { host: '1.2.3.5', queue: 'lmtp' }
+    this.connection.transaction.rcpt_to.push(rcpt, new Address('matt@other-domain.com'))
+    this.connection.transaction.notes.set('queue.next_hop', 'smtp://2.3.4.5')
+
+    await new Promise((resolve) => {
+      this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code, msg) => {
+        assert.equal(code, DENYSOFT)
+        assert.equal(msg, 'Split transaction, retry soon')
+        resolve()
+      })
+    })
+  })
+
+  it('a domain split overrides split=defer in [main]', async function () {
+    this.plugin.cfg.main.split = 'defer'
+    this.plugin.cfg['example.com'] = { host: '1.2.3.5', queue: 'lmtp', split: 'outbound' }
+    this.connection.transaction.rcpt_to.push(rcpt, new Address('matt@other-domain.com'))
+    this.connection.transaction.notes.set('queue.next_hop', 'smtp://2.3.4.5')
+
+    await new Promise((resolve) => {
+      this.plugin.do_qmd_response([OK, 'vpopmail dir'], this.connection, rcpt, (code) => {
+        assert.equal(code, OK)
+        assert.equal(this.connection.transaction.notes.get('queue.wants'), 'outbound')
+        resolve()
+      })
+    })
+  })
 })
 
 describe('get_qmd_response', function () {
