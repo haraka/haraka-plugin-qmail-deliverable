@@ -4,6 +4,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [1.4.1] - 2026-11-23
+
+- fix: a domain section without `split` inherits `split` from [main]
+- doc: document `split`
+
+### [1.4.0] - 2026-05-24
+
 - doc: clarify `txn.notes.local_sender` stores the sender domain
 - test: refactored against test-fixtures 1.7.0
 
@@ -145,3 +152,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [1.3.4]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.3.4
 [1.3.5]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.3.5
 [1.4.0]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.4.0
+[1.4.1]: https://github.com/haraka/haraka-plugin-qmail-deliverable/releases/tag/v1.4.1
